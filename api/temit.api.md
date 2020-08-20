@@ -71,7 +71,7 @@ export type Priority = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 export class Requester<Arg extends unknown, Return = unknown> extends CallableInstance<[Arg], Promise<Return>> {
     constructor(temit: TemitClient, event: string, opts?: RequesterOptions);
     // (undocumented)
-    send(arg: Arg): Promise<Return>;
+    send(arg: Arg, options?: RequesterOptions): Promise<Return>;
     }
 
 // @public (undocumented)

@@ -69,7 +69,12 @@ export class Requester<
 
   // public close() {}
 
-  public async send(arg: Arg): Promise<Return> {
+  public async send(arg: Arg, options?: RequesterOptions): Promise<Return> {
+    /**
+     * Let's parse our options.
+     */
+    const opts = this.parseOptions(options);
+
     /**
      * Let's instantly parse the data we've been given.
      */
@@ -83,7 +88,7 @@ export class Requester<
     /**
      * Generate a new message to contain our data.
      */
-    const message = this.createMessage();
+    const message = this.createMessage(opts);
 
     /**
      * Publish the message!
@@ -98,7 +103,7 @@ export class Requester<
     /**
      * If we had a timeout set, start the timer right now.
      */
-    if (this.options.timeout) this.startTimer(message);
+    if (opts.timeout) this.startTimer(message, opts.timeout);
 
     /**
      * Wait for the result.
@@ -139,10 +144,10 @@ export class Requester<
    * Start a timer for a given message that emits a timeout message
    * upon completion.
    */
-  private startTimer(message: Options.Publish) {
+  private startTimer(message: Options.Publish, timeout: number) {
     this.timers[message.messageId as string] = setTimeout(() => {
       this.temit.bus.emit(`timeout-${message.messageId}`);
-    }, this.options.timeout);
+    }, timeout);
   }
 
   /**
@@ -156,7 +161,7 @@ export class Requester<
     this.channel = await this.temit.assertPublishChannel(this.event);
   }
 
-  private createMessage(): Options.Publish {
+  private createMessage(options: InternalRequesterOptions): Options.Publish {
     const messageId = generateId();
 
     const message: Options.Publish = {
@@ -168,8 +173,8 @@ export class Requester<
       replyTo: "amq.rabbitmq.reply-to",
     };
 
-    if (this.options.priority) message.priority = this.options.priority;
-    if (this.options.timeout) message.expiration = this.options.timeout;
+    if (options.priority) message.priority = options.priority;
+    if (options.timeout) message.expiration = options.timeout;
 
     return message;
   }
@@ -188,6 +193,6 @@ export class Requester<
       timeout,
     };
 
-    return opts;
+    return { ...(this.options ?? {}), ...opts };
   }
 }
