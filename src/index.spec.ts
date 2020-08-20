@@ -23,4 +23,23 @@ import { TemitClient } from "./TemitClient";
   console.log("foo:", foo);
 
   await temit.close();
+
+  console.log("afterwards...");
+
+  await temit.connect();
+
+  await temit
+    .createEndpoint("bar", (event) => {
+      console.log("event:", event);
+
+      return "Hello, MATE!";
+    })
+    .open();
+
+  const getBar = temit.createRequestor<[], string>("bar");
+  const bar = await getBar();
+
+  console.log("bar:", bar);
+
+  await temit.close();
 })();

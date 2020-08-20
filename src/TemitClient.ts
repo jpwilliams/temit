@@ -74,7 +74,7 @@ export class TemitClient {
    * @internal
    */
   public readonly options: InternalTemitOptions;
-  private connection: Promise<Connection>;
+  private connection!: Promise<Connection>;
   private readonly publishChans: PublishChannels = {};
   /**
    * @internal
@@ -83,15 +83,22 @@ export class TemitClient {
   /**
    * @internal
    */
-  public readonly workerPool: Pool<Channel>;
+  public workerPool!: Pool<Channel>;
+  /**
+   * @internal
+   *
+   * Currently this flag is used for consumers and publishers to decide whether
+   * or not to throw errors when their channels die.
+   *
+   * When set to `true`, errors will be swallowed and consumers and publishers
+   * will die silently.
+   */
+  public warmClose = false;
 
   constructor(options?: TemitOptions) {
     this.url = options?.url ?? "amqp://localhost";
     this.options = this.parseOptions(options);
-    this.connection = new Promise((resolve) =>
-      this.bus.once("connected", resolve)
-    );
-    this.workerPool = createChannelPool(this.connection);
+    this.bootstrap();
   }
 
   /**
@@ -114,15 +121,29 @@ export class TemitClient {
     return this;
   }
 
-  // TODO add "force" option for cold/warm close?
   /**
    * Closes this instance's AMQP connection if it's active.
    *
-   * Currently this is always a cold close and consumers will throw errors.
+   * Currently this is always a cold close and will interrupt consumers and
+   * publishers.
    */
-  public async close(): Promise<void> {
+  public async close(): Promise<this> {
+    /**
+     * Set warmClose so that our consumers and publishers know that we're
+     * attempting to close.
+     *
+     * ! Pretend that we're warm closing to swallow errors.
+     * ! This will change when cold/warm closes are implemented, as warm closes
+     * ! will wait for each consumer/publisher to finish before closing the
+     * ! connection.
+     */
+    this.warmClose = true;
+
     const connection = await this.connection;
-    return connection?.close();
+    await connection?.close();
+    this.bootstrap();
+
+    return this;
   }
 
   /**
@@ -213,6 +234,14 @@ export class TemitClient {
     return new Listener(this, event, options, ...handlers);
   }
 
+  private bootstrap() {
+    this.connection = new Promise((resolve) =>
+      this.bus.once("connected", resolve)
+    );
+    this.workerPool = createChannelPool(this.connection);
+    this.warmClose = false;
+  }
+
   private parseOptions(options?: TemitOptions): InternalTemitOptions {
     const defaults: InternalTemitOptions = {
       name: generateId(),
@@ -246,7 +275,7 @@ export class TemitClient {
      */
     channel.on("error", console.error);
     channel.on("close", () => {
-      throw new ReplyConsumerDiedError();
+      if (!this.warmClose) throw new ReplyConsumerDiedError();
     });
 
     /**

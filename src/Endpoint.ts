@@ -24,7 +24,19 @@ export interface EndpointOptions {
   queue?: string;
 
   /**
-   * Sets prefetch.
+   * Sets how many messages the endpoint will pull off of the queue to process
+   * locally. Setting this to `0` disables prefetch and consumers will pull
+   * an unlimited number of items from the queue.
+   *
+   * Unlimited prefetch should be used with care. Endpoints can pull messages
+   * faster than they can deal with them, resulting in rapid memory consumption
+   * growth.
+   *
+   * Values in the `100` through `300` range usually offer optimal throughput
+   * and do not run significant risk of overwhelming consumers. Higher values
+   * often run in to the law of diminishing returns.
+   *
+   * Defaults to 48.
    */
   prefetch?: number;
 }
@@ -134,7 +146,7 @@ export class Endpoint<Args extends unknown[], Return> {
 
     channel.on("error", console.error);
     channel.on("close", () => {
-      throw new ConsumerDiedError();
+      if (!this.temit.warmClose) throw new ConsumerDiedError();
     });
 
     if (this.options.prefetch) channel.prefetch(this.options.prefetch, true);
