@@ -81,3 +81,7 @@ It's perfectly possible to provide static data as a handler.
 ### Examples in TypeScript
 
 Add examples right in to the TypeScript source as comments, similar to Golang. Good types are the key to success here.
+
+### Docusaurus
+
+Trying to use [API Extractor](https://api-extractor.com/). Let's push the docs to [Docusaurus](https://docusaurus.io).

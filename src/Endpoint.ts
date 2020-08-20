@@ -3,7 +3,7 @@ import { Channel, ConsumeMessage } from "amqplib";
 
 // local
 import { TemitClient } from "./TemitClient";
-import { Unpack } from "./types/ambient";
+import { Unpack } from "./types/utility";
 import { parseConsumerMessage } from "./utils/messaging";
 import {
   ConsumerDiedError,
@@ -16,6 +16,9 @@ import {
   wrapHandler,
 } from "./utils/handlers";
 
+/**
+ * @public
+ */
 export interface EndpointOptions {
   /**
    * Sets the specific queue to connect to. This overrides Temit's
@@ -46,11 +49,17 @@ interface InternalEndpointOptions extends EndpointOptions {
   prefetch: number;
 }
 
+/**
+ * @public
+ */
 export type EndpointHandler<Args extends unknown[], Return> = ConsumerHandler<
   Args,
   Return
 >;
 
+/**
+ * @public
+ */
 export class Endpoint<Args extends unknown[], Return> {
   private temit: TemitClient;
   private event: string;

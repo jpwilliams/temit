@@ -7,6 +7,9 @@ import { Event } from "./messaging";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
 
+/**
+ * @public
+ */
 export type ConsumerHandler<Args extends unknown[], Return> =
   | FnConsumerHandler<Args, Return>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

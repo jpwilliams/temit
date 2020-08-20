@@ -1,10 +1,16 @@
 import CallableInstance from "callable-instance";
 // import { TemitClient } from "./TemitClient";
 
+/**
+ * @public
+ */
 export interface EmitterOptions {
   foo?: string;
 }
 
+/**
+ * @public
+ */
 export class Emitter<Args extends unknown[]> extends CallableInstance<
   Args,
   Promise<void>

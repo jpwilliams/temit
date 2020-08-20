@@ -1,6 +1,9 @@
 // local
 import { TemitClient } from "./TemitClient";
 
+/**
+ * @public
+ */
 export interface ListenerOptions {
   /**
    * Sets the specific queue to connect to. This overrides Temit's
@@ -13,11 +16,17 @@ export interface ListenerEvent {
   foo?: string;
 }
 
+/**
+ * @public
+ */
 export type ListenerHandler<T extends unknown[]> = (
   event: ListenerEvent,
   ...args: T
 ) => unknown;
 
+/**
+ * @public
+ */
 export class Listener<Args extends unknown[]> {
   // private temit: TemitClient;
   // private event: string;

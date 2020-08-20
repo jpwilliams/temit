@@ -9,9 +9,12 @@ import ms from "ms";
 // local
 import { TemitClient } from "./TemitClient";
 import { generateId } from "./utils/ids";
-import { Priority } from "./types/ambient";
+import { Priority } from "./types/utility";
 import { RequestorTimeoutError } from "./utils/errors";
 
+/**
+ * @public
+ */
 export interface RequestorOptions {
   /**
    * Sets the priority of the message. Higher priority messages will
@@ -41,6 +44,9 @@ interface InternalRequestorOptions extends RequestorOptions {
   timeout: number;
 }
 
+/**
+ * @public
+ */
 export class Requestor<
   Args extends unknown[],
   Return = unknown

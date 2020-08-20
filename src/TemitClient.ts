@@ -14,7 +14,7 @@ import {
   ReplyConsumerCancelledError,
   InvalidConsumerMessageError,
 } from "./utils/errors";
-import { Unpack } from "./types/ambient";
+import { Unpack } from "./types/utility";
 import { generateId } from "./utils/ids";
 import { parseReplyConsumerMessage } from "./utils/messaging";
 import { Pool } from "generic-pool";
@@ -22,6 +22,9 @@ import { createChannelPool } from "./utils/pools";
 
 // import { parseConsumerMessage } from "./utils/messaging";
 
+/**
+ * @public
+ */
 export interface TemitOptions {
   /**
    * The name of this Temit instance.
@@ -67,6 +70,9 @@ interface PublishChannels {
   [event: string]: Channel;
 }
 
+/**
+ * @public
+ */
 export class TemitClient {
   // private emitter = new EventEmitter();
   private readonly url: string;
