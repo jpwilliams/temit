@@ -4,6 +4,9 @@ import { ConsumeMessage } from "amqplib";
 // local
 import { InvalidConsumerMessageError } from "./errors";
 
+/**
+ * @public
+ */
 export interface Event {
   id: string;
   type: string;
