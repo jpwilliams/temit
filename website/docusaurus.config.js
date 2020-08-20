@@ -43,16 +43,7 @@ module.exports = {
       links: [
         {
           title: "Docs",
-          items: [
-            {
-              label: "Style Guide",
-              to: "docs/",
-            },
-            {
-              label: "Second Doc",
-              to: "docs/doc2/",
-            },
-          ],
+          items: [],
         },
         {
           title: "Community",

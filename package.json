@@ -12,8 +12,9 @@
     "test:watch": "jest --watchAll",
     "build": "tsc --stripInternal && npm run build:docs",
     "build:watch": "onchange 'src/**/*' -- npm run build",
-    "build:docs": "node build/make-docs.js",
-    "lint:structure": "destiny ./src --write"
+    "build:docs": "node build/make-docs.js && cd website && npm run build",
+    "lint:structure": "destiny ./src --write",
+    "build:site": "npm ci && npm run build && cd website && npm ci && npm run build"
   },
   "repository": {
     "type": "git",
