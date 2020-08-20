@@ -167,9 +167,6 @@ export class TemitClient {
   /**
    * Creates a requester that can be used to request data from endpoints.
    *
-   * @typeParam Args - The arguments expected by the endpoint in tuple format.
-   * @typeParam Return - The return value expected from a successful request.
-   *
    * @param event - The event name to request data from.
    * @param opts - Optional options block for specifying requester behaviour.
    *
