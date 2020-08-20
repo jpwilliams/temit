@@ -23,6 +23,6 @@ jobs:
         uses: LouisBrunner/diff-action@v0.1.0
         with:
           old: api/temit.api.md
-          new: tmp/temit.api.md
+          new: temp/temit.api.md
           mode: deletion
           tolerance: better

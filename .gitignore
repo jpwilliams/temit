@@ -107,4 +107,4 @@ dist
 lib/
 
 # API Extractor directories
-tmp/
+temp/

@@ -136,7 +136,7 @@
      * DEFAULT VALUE: "<projectFolder>/etc/"
      */
     // "reportFolder": "<projectFolder>/etc/",
-    "reportFolder": "<projectFolder>/api/",
+    "reportFolder": "<projectFolder>/api/"
 
     /**
      * Specifies the folder where the temporary report file is written.  The file name portion is determined by
@@ -152,7 +152,6 @@
      * DEFAULT VALUE: "<projectFolder>/temp/"
      */
     // "reportTempFolder": "<projectFolder>/temp/"
-    "reportTempFolder": "<projectFolder>/tmp/"
   },
 
   /**
