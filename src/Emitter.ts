@@ -88,7 +88,7 @@ export class Emitter<Arg extends unknown> extends CallableInstance<
     /**
      * Generate a new message to contain our data.
      */
-    const message = this.createMessage();
+    const message = this.createMessage(opts);
 
     /**
      * Ascertain whether or not we should be spawning a demission queue for
@@ -227,7 +227,7 @@ export class Emitter<Arg extends unknown> extends CallableInstance<
     return { queue, expiration, shouldSetExpiry };
   }
 
-  private createMessage(): Options.Publish {
+  private createMessage(options: InternalEmitterOptions): Options.Publish {
     const messageId = generateId();
 
     const message: Options.Publish = {
@@ -238,14 +238,14 @@ export class Emitter<Arg extends unknown> extends CallableInstance<
       persistent: true,
     };
 
-    if (this.options.priority) message.priority = this.options.priority;
+    if (options.priority) message.priority = options.priority;
 
     return message;
   }
 
   private parseOptions(opts?: EmitterOptions): InternalEmitterOptions {
     const { priority, delay } = opts ?? {};
-    const tempOptions: any = { priority };
+    const tempOptions: Partial<InternalEmitterOptions> = { priority };
 
     if (delay !== undefined) {
       if (typeof delay === "string") {
