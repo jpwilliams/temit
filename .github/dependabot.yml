@@ -10,3 +10,4 @@ updates:
     schedule:
       interval: "monthly"
     open-pull-requests-limit: 99
+    rebase-strategy: disabled
