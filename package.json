@@ -12,9 +12,10 @@
     "test:watch": "jest --watchAll",
     "build": "tsc --stripInternal && npm run build:docs",
     "build:watch": "onchange 'src/**/*' -- npm run build",
-    "build:docs": "node build/make-docs.js && cd website && npm run build",
+    "build:docs": "npm run build:site:api && node build/make-docs.js",
     "lint:structure": "destiny ./src --write",
-    "build:site": "npm ci && npm run build && cd website && npm ci && npm run build"
+    "build:site:api": "api-extractor run --local --verbose && api-documenter markdown --input-folder temp --output-folder website/docs/api",
+    "build:site": "npm run build && cd website && npm ci && npm run build"
   },
   "repository": {
     "type": "git",
