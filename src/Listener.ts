@@ -13,7 +13,7 @@ import {
   ConsumerCancelledError,
   HandlerRequiredError,
 } from "./utils/errors";
-import { parseConsumerMessage, Event } from "./utils/messaging";
+import { parseConsumerMessage, TemitEvent } from "./utils/messaging";
 
 /**
  * @public
@@ -203,7 +203,7 @@ export class Listener<Arg extends unknown> {
      *
      * If this fails, we nack the message to tell RabbitMQ that it's a bad'un.
      */
-    let event: Event;
+    let event: TemitEvent;
     let data: [Arg];
 
     try {

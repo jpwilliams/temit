@@ -4,7 +4,7 @@ import { Channel, ConsumeMessage } from "amqplib";
 // local
 import { TemitClient } from "./TemitClient";
 import { Unpack } from "./types/utility";
-import { parseConsumerMessage, Event } from "./utils/messaging";
+import { parseConsumerMessage, TemitEvent } from "./utils/messaging";
 import {
   ConsumerDiedError,
   ConsumerCancelledError,
@@ -186,7 +186,7 @@ export class Endpoint<Arg extends unknown, Return> {
      * If this fails, we just ditch the message here. Endpoints don't require
      * acks, so there's nothing to do but just WALK AWAY.
      */
-    let event: Event;
+    let event: TemitEvent;
     let data: [Arg];
 
     try {

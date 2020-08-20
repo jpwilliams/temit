@@ -2,7 +2,7 @@
 import { serializeError, ErrorObject } from "serialize-error";
 
 // local
-import { Event } from "./messaging";
+import { TemitEvent } from "./messaging";
 
 /**
  * @public
@@ -22,12 +22,12 @@ export type ConsumerHandler<Args extends unknown[], Return> =
  * @public
  */
 export type FnConsumerHandler<Args extends unknown[], Return> = (
-  event: Event,
+  event: TemitEvent,
   ...args: Args
 ) => Promise<Return> | Return;
 
 export type PromiseConsumerHandler<Args extends unknown[], Return> = (
-  event: Event,
+  event: TemitEvent,
   ...args: Args
 ) => Promise<[null, Return] | [ErrorObject | unknown, null]>;
 

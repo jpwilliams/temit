@@ -10,19 +10,21 @@ import CallableInstance from 'callable-instance';
 export type ConsumerHandler<Args extends unknown[], Return> = FnConsumerHandler<Args, Return> | NotFunction<Return>;
 
 // @public (undocumented)
-export class Emitter<Args extends unknown[]> extends CallableInstance<Args, Promise<void>> {
-    constructor();
-}
+export class Emitter<Arg extends unknown> extends CallableInstance<[Arg], Promise<void>> {
+    constructor(temit: TemitClient, event: string, opts?: EmitterOptions);
+    // (undocumented)
+    send(arg: Arg, options?: EmitterOptions): Promise<void>;
+    }
 
 // @public (undocumented)
 export interface EmitterOptions {
-    // (undocumented)
-    foo?: string;
+    delay?: number | string | Date;
+    priority?: Priority;
 }
 
 // @public (undocumented)
-export class Endpoint<Args extends unknown[], Return> {
-    constructor(temit: TemitClient, event: string, opts: EndpointOptions | undefined, handler: EndpointHandler<Args, Unpack<Return>>);
+export class Endpoint<Arg extends unknown, Return> {
+    constructor(temit: TemitClient, event: string, opts: EndpointOptions | undefined, handler: EndpointHandler<Arg, Unpack<Return>>);
     // (undocumented)
     close(): this;
     // (undocumented)
@@ -30,21 +32,19 @@ export class Endpoint<Args extends unknown[], Return> {
     }
 
 // @public (undocumented)
-export type EndpointHandler<Args extends unknown[], Return> = ConsumerHandler<Args, Return>;
+export type EndpointHandler<Arg extends unknown, Return> = ConsumerHandler<[Arg], Return>;
 
 // @public (undocumented)
 export interface EndpointOptions {
     prefetch?: number;
 }
 
-// Warning: (ae-forgotten-export) The symbol "Event" needs to be exported by the entry point index.d.ts
-//
 // @public (undocumented)
-export type FnConsumerHandler<Args extends unknown[], Return> = (event: Event_2, ...args: Args) => Promise<Return> | Return;
+export type FnConsumerHandler<Args extends unknown[], Return> = (event: TemitEvent, ...args: Args) => Promise<Return> | Return;
 
 // @public (undocumented)
-export class Listener<Args extends unknown[]> {
-    constructor(temit: TemitClient, event: string, opts: ListenerOptions | undefined, handler: ListenerHandler<Args>);
+export class Listener<Arg extends unknown> {
+    constructor(temit: TemitClient, event: string, opts: ListenerOptions | undefined, handler: ListenerHandler<Arg>);
     // (undocumented)
     close(): this;
     // (undocumented)
@@ -52,7 +52,7 @@ export class Listener<Args extends unknown[]> {
     }
 
 // @public (undocumented)
-export type ListenerHandler<Args extends unknown[]> = ConsumerHandler<Args, never>;
+export type ListenerHandler<Arg extends unknown> = ConsumerHandler<[Arg], never>;
 
 // @public (undocumented)
 export interface ListenerOptions {
@@ -68,10 +68,10 @@ export type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
 export type Priority = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 // @public (undocumented)
-export class Requester<Args extends unknown[], Return = unknown> extends CallableInstance<Args, Promise<Return>> {
+export class Requester<Arg extends unknown, Return = unknown> extends CallableInstance<[Arg], Promise<Return>> {
     constructor(temit: TemitClient, event: string, opts?: RequesterOptions);
     // (undocumented)
-    send(...args: Args): Promise<Return>;
+    send(arg: Arg): Promise<Return>;
     }
 
 // @public (undocumented)
@@ -85,20 +85,32 @@ export class TemitClient {
     constructor(name: string, options?: TemitOptions);
     close(): Promise<this>;
     connect(): Promise<this>;
-    emitter<Args extends unknown[]>(event: string, opts?: EmitterOptions): Emitter<Args>;
-    endpoint<Args extends unknown[] = unknown[], Return = any>(event: string, handler: EndpointHandler<Args, Unpack<Return>>): Endpoint<Args, Return>;
+    emitter<Arg extends unknown>(event: string, opts?: EmitterOptions): Emitter<Arg>;
+    endpoint<Arg extends unknown = unknown, Return = any>(event: string, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
     // (undocumented)
-    endpoint<Args extends unknown[] = unknown[], Return = any>(event: string, opts: EndpointOptions, handler: EndpointHandler<Args, Unpack<Return>>): Endpoint<Args, Return>;
+    endpoint<Arg extends unknown = unknown, Return = any>(event: string, opts: EndpointOptions, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
     isConnected(): boolean;
-    listener<Args extends unknown[] = unknown[]>(event: string, handler: ListenerHandler<Args>): Listener<Args>;
+    listener<Arg extends unknown = unknown>(event: string, handler: ListenerHandler<Arg>): Listener<Arg>;
     // (undocumented)
-    listener<Args extends unknown[] = unknown[]>(event: string, opts: ListenerOptions, handler: ListenerHandler<Args>): Listener<Args>;
+    listener<Arg extends unknown = unknown>(event: string, opts: ListenerOptions, handler: ListenerHandler<Arg>): Listener<Arg>;
     // (undocumented)
     readonly name: string;
-    requester<Args extends unknown[], Return>(event: string, opts?: RequesterOptions): Requester<Args, Return>;
+    requester<Arg extends unknown, Return>(event: string, opts?: RequesterOptions): Requester<Arg, Return>;
     }
 
 // @public (undocumented)
+export interface TemitEvent {
+    // (undocumented)
+    id: string;
+    // (undocumented)
+    resource: string;
+    // (undocumented)
+    sent?: Date;
+    // (undocumented)
+    type: string;
+}
+
+// @public
 export interface TemitOptions {
     exchange?: string;
     url?: string;

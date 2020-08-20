@@ -12,4 +12,4 @@ export type {
   FnConsumerHandler,
   NotFunction,
 } from "./utils/handlers";
-export type { Event } from "./utils/messaging";
+export type { TemitEvent } from "./utils/messaging";

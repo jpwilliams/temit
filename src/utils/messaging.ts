@@ -7,7 +7,7 @@ import { InvalidConsumerMessageError } from "./errors";
 /**
  * @public
  */
-export interface Event {
+export interface TemitEvent {
   id: string;
   type: string;
   resource: string;
@@ -16,7 +16,7 @@ export interface Event {
 
 export const parseConsumerMessage = <Args extends unknown[]>(
   msg: ConsumeMessage
-): [Event, Args] => {
+): [TemitEvent, Args] => {
   let data: Args;
 
   try {
@@ -53,8 +53,8 @@ export const parseReplyConsumerMessage = (
   return [err, data];
 };
 
-const parseEvent = (msg: ConsumeMessage): Event => {
-  const event: Event = {
+const parseEvent = (msg: ConsumeMessage): TemitEvent => {
+  const event: TemitEvent = {
     id: msg.properties.messageId,
     type: msg.fields.routingKey,
     resource: msg.properties.appId,
