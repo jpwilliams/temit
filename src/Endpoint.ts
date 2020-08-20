@@ -4,7 +4,7 @@ import { Channel, ConsumeMessage } from "amqplib";
 // local
 import { TemitClient } from "./TemitClient";
 import { Unpack } from "./types/utility";
-import { parseConsumerMessage } from "./utils/messaging";
+import { parseConsumerMessage, Event } from "./utils/messaging";
 import {
   ConsumerDiedError,
   ConsumerCancelledError,
@@ -20,12 +20,6 @@ import {
  * @public
  */
 export interface EndpointOptions {
-  /**
-   * Sets the specific queue to connect to. This overrides Temit's
-   * guided setting.
-   */
-  queue?: string;
-
   /**
    * Sets how many messages the endpoint will pull off of the queue to process
    * locally. Setting this to `0` disables prefetch and consumers will pull
@@ -52,27 +46,27 @@ interface InternalEndpointOptions extends EndpointOptions {
 /**
  * @public
  */
-export type EndpointHandler<Args extends unknown[], Return> = ConsumerHandler<
-  Args,
+export type EndpointHandler<Arg extends unknown, Return> = ConsumerHandler<
+  [Arg],
   Return
 >;
 
 /**
  * @public
  */
-export class Endpoint<Args extends unknown[], Return> {
+export class Endpoint<Arg extends unknown, Return> {
   private temit: TemitClient;
   private event: string;
   private options: InternalEndpointOptions;
   private bootstrapped?: Promise<this>;
   private channel?: Channel;
-  private handler?: PromiseConsumerHandler<Args, Unpack<Return>>;
+  private handler?: PromiseConsumerHandler<[Arg], Unpack<Return>>;
 
   constructor(
     temit: TemitClient,
     event: string,
     opts: EndpointOptions = {},
-    handler: EndpointHandler<Args, Unpack<Return>>
+    handler: EndpointHandler<Arg, Unpack<Return>>
   ) {
     this.temit = temit;
     this.event = event;
@@ -106,7 +100,7 @@ export class Endpoint<Args extends unknown[], Return> {
   }
 
   private parseOptions(options?: EndpointOptions): InternalEndpointOptions {
-    const queue = options?.queue || this.event;
+    const queue = this.event;
     const prefetch = options?.prefetch ?? 48;
 
     const opts: InternalEndpointOptions = { queue, prefetch };
@@ -116,7 +110,7 @@ export class Endpoint<Args extends unknown[], Return> {
 
   private async bootstrap(): Promise<this> {
     /**
-     *
+     * Grab a worker from the pool.
      */
     const worker = await this.temit.workerPool.acquire();
 
@@ -143,7 +137,7 @@ export class Endpoint<Args extends unknown[], Return> {
     }
 
     /**
-     * The queue exists, so let's create a proper consumption channel
+     * The queue exists, so let's create a consumption channel.
      */
     this.channel = await this.assertConsumerChannel();
 
@@ -188,8 +182,18 @@ export class Endpoint<Args extends unknown[], Return> {
 
     /**
      * Parse the message to extract what we need.
+     *
+     * If this fails, we just ditch the message here. Endpoints don't require
+     * acks, so there's nothing to do but just WALK AWAY.
      */
-    const [event, data] = parseConsumerMessage<Args>(msg);
+    let event: Event;
+    let data: [Arg];
+
+    try {
+      [event, data] = parseConsumerMessage<[Arg]>(msg);
+    } catch (_err) {
+      return;
+    }
 
     /**
      * Confirm that we have a handler. If not, fail miserably.
@@ -215,7 +219,7 @@ export class Endpoint<Args extends unknown[], Return> {
     const serializedResult = Buffer.from(JSON.stringify(result));
 
     /**
-     * Use a worker to send the message back to the requestor.
+     * Use a worker to send the message back to the requester.
      */
     const worker = await this.temit.workerPool.acquire();
 
@@ -239,8 +243,8 @@ export class Endpoint<Args extends unknown[], Return> {
   }
 
   private parseHandler(
-    handler: EndpointHandler<Args, Unpack<Return>>
-  ): PromiseConsumerHandler<Args, Unpack<Return>> {
+    handler: EndpointHandler<Arg, Unpack<Return>>
+  ): PromiseConsumerHandler<[Arg], Unpack<Return>> {
     return wrapHandler(handler);
   }
 }

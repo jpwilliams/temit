@@ -1,8 +1,8 @@
 {
-  "name": "@jpwilliams/temit",
+  "name": "temit",
   "private": false,
   "version": "0.0.0",
-  "description": "",
+  "description": "RabbitMQ-backed TypeScript Microservices",
   "main": "./lib/index.js",
   "typings": "./dist/temit.d.ts",
   "scripts": {
@@ -10,12 +10,10 @@
     "clean": "rm -rf lib",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "build": "tsc --stripInternal",
+    "build": "tsc --stripInternal && npm run build:docs",
     "build:watch": "onchange 'src/**/*' -- npm run build",
-    "build:docs": "typedoc",
-    "build:docs:watch": "onchange 'src/**/*' -- npm run build:docs",
-    "lint:structure": "destiny ./src --write",
-    "api-extractor": "api-extractor run --local --verbose"
+    "build:docs": "node build/make-docs.js",
+    "lint:structure": "destiny ./src --write"
   },
   "repository": {
     "type": "git",
@@ -29,9 +27,11 @@
   },
   "homepage": "https://github.com/jpwilliams/temit#readme",
   "files": [
-    "lib"
+    "lib",
+    "dist"
   ],
   "devDependencies": {
+    "@microsoft/api-documenter": "^7.8.29",
     "@types/amqplib": "^0.5.13",
     "@types/generic-pool": "^3.1.9",
     "@types/jest": "^26.0.8",
@@ -51,10 +51,8 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "jest": "^24.9.0",
-    "onchange": "^7.0.2",
     "prettier": "^2.0.5",
     "ts-jest": "^24.3.0",
-    "typedoc": "^0.17.8",
     "typescript": "^3.9.7"
   },
   "dependencies": {

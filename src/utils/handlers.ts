@@ -4,8 +4,11 @@ import { serializeError, ErrorObject } from "serialize-error";
 // local
 import { Event } from "./messaging";
 
+/**
+ * @public
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
+export type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
 
 /**
  * @public
@@ -15,7 +18,10 @@ export type ConsumerHandler<Args extends unknown[], Return> =
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | NotFunction<Return>;
 
-type FnConsumerHandler<Args extends unknown[], Return> = (
+/**
+ * @public
+ */
+export type FnConsumerHandler<Args extends unknown[], Return> = (
   event: Event,
   ...args: Args
 ) => Promise<Return> | Return;

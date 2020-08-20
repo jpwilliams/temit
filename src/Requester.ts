@@ -10,12 +10,12 @@ import ms from "ms";
 import { TemitClient } from "./TemitClient";
 import { generateId } from "./utils/ids";
 import { Priority } from "./types/utility";
-import { RequestorTimeoutError } from "./utils/errors";
+import { RequesterTimeoutError, RequesterNoRouteError } from "./utils/errors";
 
 /**
  * @public
  */
-export interface RequestorOptions {
+export interface RequesterOptions {
   /**
    * Sets the priority of the message. Higher priority messages will
    * be routed to consumers before lower priority messages, regardless
@@ -40,25 +40,25 @@ export interface RequestorOptions {
   timeout?: string | number;
 }
 
-interface InternalRequestorOptions extends RequestorOptions {
+interface InternalRequesterOptions extends RequesterOptions {
   timeout: number;
 }
 
 /**
  * @public
  */
-export class Requestor<
-  Args extends unknown[],
+export class Requester<
+  Arg extends unknown,
   Return = unknown
-> extends CallableInstance<Args, Promise<Return>> {
+> extends CallableInstance<[Arg], Promise<Return>> {
   private temit: TemitClient;
   private event: string;
   private channel?: Channel;
   private isReady: Promise<void>;
-  private options: InternalRequestorOptions;
+  private options: InternalRequesterOptions;
   private timers: Record<string, NodeJS.Timeout> = {};
 
-  constructor(temit: TemitClient, event: string, opts: RequestorOptions = {}) {
+  constructor(temit: TemitClient, event: string, opts: RequesterOptions = {}) {
     super("send");
 
     this.temit = temit;
@@ -69,11 +69,11 @@ export class Requestor<
 
   // public close() {}
 
-  public async send(...args: Args): Promise<Return> {
+  public async send(arg: Arg): Promise<Return> {
     /**
      * Let's instantly parse the data we've been given.
      */
-    const data = Buffer.from(JSON.stringify(args));
+    const data = Buffer.from(JSON.stringify([arg]));
 
     /**
      * Don't try doing anything before we're bootstrapped.
@@ -111,10 +111,16 @@ export class Requestor<
       const close = () => {
         this.temit.bus.removeAllListeners(`timeout-${message.messageId}`);
         this.temit.bus.removeAllListeners(`data-${message.messageId}`);
+        this.temit.bus.removeAllListeners(`return-${message.messageId}`);
       };
 
       this.temit.bus.once(`timeout-${message.messageId}`, () => {
-        reject(new RequestorTimeoutError());
+        reject(new RequesterTimeoutError());
+        close();
+      });
+
+      this.temit.bus.once(`return-${message.messageId}`, () => {
+        reject(new RequesterNoRouteError());
         close();
       });
 
@@ -140,7 +146,7 @@ export class Requestor<
   }
 
   /**
-   * Bootstrap the requestor by performing any set-up required before
+   * Bootstrap the requester by performing any set-up required before
    * interfacing with RabbitMQ.
    */
   private async bootstrap(): Promise<void> {
@@ -156,7 +162,7 @@ export class Requestor<
     const message: Options.Publish = {
       mandatory: true,
       messageId,
-      appId: this.temit.options?.name,
+      appId: this.temit.name,
       timestamp: Date.now(),
       correlationId: messageId,
       replyTo: "amq.rabbitmq.reply-to",
@@ -168,15 +174,15 @@ export class Requestor<
     return message;
   }
 
-  private parseOptions(options?: RequestorOptions): InternalRequestorOptions {
-    const defaults: Partial<InternalRequestorOptions> = {};
+  private parseOptions(options?: RequesterOptions): InternalRequesterOptions {
+    const defaults: Partial<InternalRequesterOptions> = {};
 
     const timeout =
       typeof options?.timeout === "string"
         ? ms(options.timeout)
         : options?.timeout ?? ms("30s");
 
-    const opts: InternalRequestorOptions = {
+    const opts: InternalRequesterOptions = {
       ...defaults,
       ...(options ?? {}),
       timeout,

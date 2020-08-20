@@ -1,12 +1,22 @@
+/**
+ * RabbitMQ-backed TypeScript Microservices.
+ *
+ * @remarks
+ * Hmm. Temit.
+ *
+ * @packageDocumentation
+ */
+
 // core
 import { EventEmitter } from "events";
 
 // public
 import amqplib, { Connection, Channel, ConsumeMessage } from "amqplib";
+import { Pool } from "generic-pool";
 
 // local
 import { Endpoint, EndpointOptions, EndpointHandler } from "./Endpoint";
-import { Requestor, RequestorOptions } from "./Requestor";
+import { Requester, RequesterOptions } from "./Requester";
 import { Emitter, EmitterOptions } from "./Emitter";
 import { ListenerOptions, ListenerHandler, Listener } from "./Listener";
 import {
@@ -15,34 +25,19 @@ import {
   InvalidConsumerMessageError,
 } from "./utils/errors";
 import { Unpack } from "./types/utility";
-import { generateId } from "./utils/ids";
 import { parseReplyConsumerMessage } from "./utils/messaging";
-import { Pool } from "generic-pool";
 import { createChannelPool } from "./utils/pools";
 
-// import { parseConsumerMessage } from "./utils/messaging";
-
 /**
+ * Options provided to TemitClient detailing its connection to RabbitMQ.
+ *
  * @public
  */
 export interface TemitOptions {
   /**
-   * The name of this Temit instance.
-   *
-   * This name is used when creating queue names and sending messages,
-   * so is useful to distinguish between different service traffic.
-   *
-   * It's recommended to set this to be the name of the system or component
-   * that the instance resides in. e.g. `"user-service"` or `"auth-handler"`.
-   *
-   * Defaults to a generated ULID that is unique on every run.
-   */
-  name?: string;
-
-  /**
    * The name of the RabbitMQ exchange that Temit will send its traffic through.
    *
-   * You shouldn't have to change this option in the most of circumstances,
+   * You shouldn't have to change this option in the majority of circumstances,
    * but this can be useful for separating groups of Temit instances that don't
    * need access to each other in larger systems.
    *
@@ -59,7 +54,6 @@ export interface TemitOptions {
 }
 
 interface InternalTemitOptions extends Omit<TemitOptions, "url"> {
-  name: string;
   exchange: string;
 }
 
@@ -74,8 +68,8 @@ interface PublishChannels {
  * @public
  */
 export class TemitClient {
-  // private emitter = new EventEmitter();
   private readonly url: string;
+  public readonly name: string;
   /**
    * @internal
    */
@@ -91,17 +85,27 @@ export class TemitClient {
    */
   public workerPool!: Pool<Channel>;
   /**
-   * @internal
-   *
    * Currently this flag is used for consumers and publishers to decide whether
    * or not to throw errors when their channels die.
    *
    * When set to `true`, errors will be swallowed and consumers and publishers
    * will die silently.
+   *
+   * @internal
    */
   public warmClose = false;
+  /**
+   * @internal
+   */
+  public listenerCounter = 1;
 
-  constructor(options?: TemitOptions) {
+  /**
+   * @param name - The name of the service connecting to RabbitMQ.
+   * @param options - Optional options block detailing how to connect to
+   * RabbitMQ.
+   */
+  constructor(name: string, options?: TemitOptions) {
+    this.name = name;
     this.url = options?.url ?? "amqp://localhost";
     this.options = this.parseOptions(options);
     this.bootstrap();
@@ -161,83 +165,92 @@ export class TemitClient {
   }
 
   /**
-   * Creates a requestor that can be used to request data from endpoints.
+   * Creates a requester that can be used to request data from endpoints.
+   *
+   * @typeParam Args - The arguments expected by the endpoint in tuple format.
+   * @typeParam Return - The return value expected from a successful request.
+   *
+   * @param event - The event name to request data from.
+   * @param opts - Optional options block for specifying requester behaviour.
+   *
+   * @returns A new requester.
    */
-  public createRequestor<Args extends unknown[], Return>(
+  public requester<Arg extends unknown, Return>(
     event: string,
-    opts?: RequestorOptions
-  ): Requestor<Args, Return> {
-    return new Requestor(this, event, opts);
+    opts?: RequesterOptions
+  ): Requester<Arg, Return> {
+    return new Requester<Arg, Return>(this, event, opts);
   }
 
   /**
-   * Creates an endpoint that can be used to respond to requestors.
+   * Creates an endpoint that can be used to respond to requesters.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public createEndpoint<Args extends unknown[] = unknown[], Return = any>(
+  public endpoint<Arg extends unknown = unknown, Return = any>(
     event: string,
-    handler: EndpointHandler<Args, Unpack<Return>>
-  ): Endpoint<Args, Return>;
+    handler: EndpointHandler<Arg, Unpack<Return>>
+  ): Endpoint<Arg, Return>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public createEndpoint<Args extends unknown[] = unknown[], Return = any>(
+  public endpoint<Arg extends unknown = unknown, Return = any>(
     event: string,
     opts: EndpointOptions,
-    handler: EndpointHandler<Args, Unpack<Return>>
-  ): Endpoint<Args, Return>;
+    handler: EndpointHandler<Arg, Unpack<Return>>
+  ): Endpoint<Arg, Return>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public createEndpoint<Args extends unknown[] = unknown[], Return = any>(
+  public endpoint<Arg extends unknown = unknown, Return = any>(
     event: string,
     ...args: unknown[]
-  ): Endpoint<Args, Return> {
+  ): Endpoint<Arg, Return> {
     let options: EndpointOptions = {};
-    let handler: EndpointHandler<Args, Unpack<Return>>;
+    let handler: EndpointHandler<Arg, Unpack<Return>>;
 
     if (typeof args[0] !== "function") {
       options = { ...(args[0] as EndpointOptions) };
-      handler = args[1] as EndpointHandler<Args, Unpack<Return>>;
+      handler = args[1] as EndpointHandler<Arg, Unpack<Return>>;
     } else {
-      handler = args[0] as EndpointHandler<Args, Unpack<Return>>;
+      handler = args[0] as EndpointHandler<Arg, Unpack<Return>>;
     }
 
-    return new Endpoint(this, event, options, handler);
+    return new Endpoint<Arg, Return>(this, event, options, handler);
   }
 
   /**
    * Creates an emitter that can be used to push data to listeners.
    */
-  public createEmitter<Args extends unknown[]>(
+  public emitter<Arg extends unknown>(
     event: string,
     opts?: EmitterOptions
-  ): Emitter<Args> {
-    return new Emitter<Args>(/* this, event, opts */);
+  ): Emitter<Arg> {
+    return new Emitter<Arg>(this, event, opts);
   }
 
   /**
    * Creates a listener that can be used to receive data from emitters.
    */
-  public createListener<Args extends unknown[] = unknown[]>(
+  public listener<Arg extends unknown = unknown>(
     event: string,
-    opts?: ListenerOptions,
-    ...handlers: ListenerHandler<Args>[]
-  ): Listener<Args>;
-  public createListener<Args extends unknown[] = unknown[]>(
+    handler: ListenerHandler<Arg>
+  ): Listener<Arg>;
+  public listener<Arg extends unknown = unknown>(
     event: string,
-    ...handlers: ListenerHandler<Args>[]
-  ): Listener<Args>;
-  public createListener<Args extends unknown[] = unknown[]>(
+    opts: ListenerOptions,
+    handler: ListenerHandler<Arg>
+  ): Listener<Arg>;
+  public listener<Arg extends unknown = unknown>(
     event: string,
     ...args: unknown[]
-  ): Listener<Args> {
+  ): Listener<Arg> {
     let options: ListenerOptions = {};
-    const handlers: ListenerHandler<Args>[] = [];
+    let handler: ListenerHandler<Arg>;
 
-    if (typeof args[0] === "function") {
-      handlers.push(...(args as ListenerHandler<Args>[]));
-    } else if (args[0]) {
+    if (typeof args[0] !== "function") {
       options = { ...(args[0] as ListenerOptions) };
+      handler = args[1] as ListenerHandler<Arg>;
+    } else {
+      handler = args[0] as ListenerHandler<Arg>;
     }
 
-    return new Listener(this, event, options, ...handlers);
+    return new Listener<Arg>(this, event, options, handler);
   }
 
   private bootstrap() {
@@ -250,7 +263,6 @@ export class TemitClient {
 
   private parseOptions(options?: TemitOptions): InternalTemitOptions {
     const defaults: InternalTemitOptions = {
-      name: generateId(),
       exchange: "temit",
     };
 
@@ -283,6 +295,14 @@ export class TemitClient {
     channel.on("close", () => {
       if (!this.warmClose) throw new ReplyConsumerDiedError();
     });
+
+    /**
+     * Add an extra listener for if a message is returned due to not being
+     * routed.
+     */
+    channel.on("return", (msg: ConsumeMessage) =>
+      this.bus.emit(`return-${msg.properties.messageId}`)
+    );
 
     /**
      * Start consuming for this event right now.

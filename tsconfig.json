@@ -14,10 +14,5 @@
     "module": "CommonJS"
   },
   "include": ["src/**/*"],
-  "exclude": ["**/*.spec.ts"],
-  "typedocOptions": {
-    "mode": "file",
-    "module": "commonjs",
-    "out": "docs"
-  }
+  "exclude": ["**/*.spec.ts"]
 }

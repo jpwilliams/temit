@@ -105,3 +105,6 @@ dist
 
 # Generated TypeScript lib
 lib/
+
+# API Extractor directories
+temp/

@@ -31,12 +31,22 @@ export class ReplyConsumerCancelledError extends Error {
   }
 }
 
-export class RequestorTimeoutError extends Error {
+export class RequesterTimeoutError extends Error {
   constructor(message?: string) {
     super(message);
 
-    this.name = "RequestorTimeoutError";
+    this.name = "RequesterTimeoutError";
     this.message = this.message || "Request timed out.";
+  }
+}
+
+export class RequesterNoRouteError extends Error {
+  constructor(message?: string) {
+    super(message);
+
+    this.name = "RequesterNoRoute";
+    this.message =
+      this.message || "Request found no endpoints to route to, so failed";
   }
 }
 

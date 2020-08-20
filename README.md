@@ -34,15 +34,17 @@ We need a way to address this, ideally without moving all tests in to a separate
 >
 > P.S. This is gonna age well, right?
 
-While it's very possible to be able to send more than a single argument from a requestor to an endpoint or from an emitter to a listener, it's semantically simpler to keep this to a single argument.
+While it's very possible to be able to send more than a single argument from a requester to an endpoint or from an emitter to a listener, it's semantically simpler to keep this to a single argument.
 
 While the API may be prettier for a Node.js implementation, other languages may not deal so cleanly with mapping function arguments, so it's a safer approach to instead stick with a single JSON object.
 
-### Requestor fallbacks
+In addition, refactoring local code by adding and removing arguments is one thing, but changing the profile of the data being sent across a network boundary is another.
+
+### Requester fallbacks
 
 I really like the idea of sending a request off and automatically getting `null` as the response even if something errored. Problem is, this also relies on users ensuring that they're handling those hidden errors.
 
-It's possible to provide fallback functionality as a requestor option, but I think it'd be a good idea to _force_ users to be handling errors elsewhere (via an `onError` function or something similar) before we allow it.
+It's possible to provide fallback functionality as a requester option, but I think it'd be a good idea to _force_ users to be handling errors elsewhere (via an `onError` function or something similar) before we allow it.
 
 ### Decorators
 
@@ -85,3 +87,7 @@ Add examples right in to the TypeScript source as comments, similar to Golang. G
 ### Docusaurus
 
 Trying to use [API Extractor](https://api-extractor.com/). Let's push the docs to [Docusaurus](https://docusaurus.io).
+
+### Listener numbers
+
+Registering listeners is pretty grim what with the order having to be exactly the same. Should we enforce that a string be given that represents the name of the listener and then we use that to do the grouping instead?
