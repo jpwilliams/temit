@@ -77,3 +77,7 @@ An interesting project to add on top should it be seen as viable, though.
 ### Data as handlers
 
 It's perfectly possible to provide static data as a handler.
+
+### Examples in TypeScript
+
+Add examples right in to the TypeScript source as comments, similar to Golang. Good types are the key to success here.
