@@ -1,0 +1,28 @@
+name: Check for API changes
+
+on: [push, pull_request]
+
+jobs:
+  api-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "10.x"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build code
+        run: npm run build:src
+      - name: Run API-Extractor
+        run: npm run api:check
+      - name: API-Extractor failure
+        if: ${{ failure() }}
+        uses: LouisBrunner/diff-action@v0.1.0
+        with:
+          old: api/charts.api.md
+          new: tmp/charts.api.md
+          mode: deletion
+          tolerance: better
