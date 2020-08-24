@@ -40,7 +40,7 @@ export interface EndpointOptions {
 }
 
 // @public (undocumented)
-export type FnConsumerHandler<Args extends unknown[], Return> = (event: TemitEvent, ...args: Args) => Promise<Return> | Return;
+export type FnConsumerHandler<Args extends unknown[], Return> = (event: Readonly<TemitEvent>, ...args: Args) => Promise<Return> | Return;
 
 // @public (undocumented)
 export class Listener<Arg extends unknown> {

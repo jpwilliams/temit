@@ -1,20 +1,24 @@
 // public
 import { Channel, ConsumeMessage } from "amqplib";
+import Debug from "debug";
 
 // local
-import { TemitClient } from "./TemitClient";
-import { Unpack } from "./types/utility";
-import { parseConsumerMessage, TemitEvent } from "./utils/messaging";
+import { TemitClient } from "../TemitClient";
+import { Unpack } from "../types/utility";
+import { parseConsumerMessage, TemitEvent } from "../utils/messaging";
 import {
   ConsumerDiedError,
   ConsumerCancelledError,
   HandlerRequiredError,
-} from "./utils/errors";
+} from "../utils/errors";
 import {
   ConsumerHandler,
   PromiseConsumerHandler,
   wrapHandler,
-} from "./utils/handlers";
+} from "../utils/handlers";
+
+// config
+const debug = Debug("temit:endpoint");
 
 /**
  * @public
@@ -149,6 +153,8 @@ export class Endpoint<Arg extends unknown, Return> {
 
     channel.on("error", console.error);
     channel.on("close", () => {
+      channel.removeAllListeners();
+      debug(`Consumer channel closed for event "${this.event}"`);
       if (!this.temit.warmClose) throw new ConsumerDiedError();
     });
 

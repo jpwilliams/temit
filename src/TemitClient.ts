@@ -15,10 +15,18 @@ import amqplib, { Connection, Channel, ConsumeMessage } from "amqplib";
 import { Pool } from "generic-pool";
 
 // local
-import { Endpoint, EndpointOptions, EndpointHandler } from "./Endpoint";
-import { Requester, RequesterOptions } from "./Requester";
-import { Emitter, EmitterOptions } from "./Emitter";
-import { ListenerOptions, ListenerHandler, Listener } from "./Listener";
+import {
+  Endpoint,
+  EndpointOptions,
+  EndpointHandler,
+} from "./components/Endpoint";
+import { Requester, RequesterOptions } from "./components/Requester";
+import { Emitter, EmitterOptions } from "./components/Emitter";
+import {
+  ListenerOptions,
+  ListenerHandler,
+  Listener,
+} from "./components/Listener";
 import {
   ReplyConsumerDiedError,
   ReplyConsumerCancelledError,
@@ -98,6 +106,7 @@ export class TemitClient {
    * @internal
    */
   public listenerCounter = 1;
+  private connecting?: Promise<this>;
 
   /**
    * @param name - The name of the service connecting to RabbitMQ.
@@ -115,20 +124,34 @@ export class TemitClient {
    * Connect to the AMQP node given when this instance was instantiated.
    */
   public async connect(): Promise<this> {
-    const connection = await amqplib.connect(this.url);
-    const channel = await connection.createChannel();
+    /**
+     * Ensure that connecting is only running once.
+     */
+    if (!this.connecting) {
+      // eslint-disable-next-line no-async-promise-executor
+      this.connecting = new Promise(async (resolve, reject) => {
+        try {
+          const connection = await amqplib.connect(this.url);
+          const channel = await connection.createChannel();
 
-    await channel.assertExchange(this.options.exchange, "topic", {
-      durable: true,
-      internal: false,
-      autoDelete: true,
-    });
+          await channel.assertExchange(this.options.exchange, "topic", {
+            durable: true,
+            internal: false,
+            autoDelete: true,
+          });
 
-    await channel.close();
+          await channel.close();
 
-    this.bus.emit("connected", connection);
+          this.bus.emit("connected", connection);
 
-    return this;
+          resolve(this);
+        } catch (err) {
+          reject(err);
+        }
+      });
+    }
+
+    return this.connecting;
   }
 
   /**
@@ -136,6 +159,9 @@ export class TemitClient {
    *
    * Currently this is always a cold close and will interrupt consumers and
    * publishers.
+   *
+   * ! You cannot re-open a closed instance of Temit; to create a new
+   * !connection, create a new TemitClient.
    */
   public async close(): Promise<this> {
     /**
@@ -150,8 +176,11 @@ export class TemitClient {
     this.warmClose = true;
 
     const connection = await this.connection;
-    await connection?.close();
-    this.bootstrap();
+
+    await Promise.all([connection.close(), this.workerPool.clear()]);
+
+    delete this.connecting;
+    this.bus.removeAllListeners();
 
     return this;
   }
@@ -250,12 +279,14 @@ export class TemitClient {
     return new Listener<Arg>(this, event, options, handler);
   }
 
-  private bootstrap() {
+  private bootstrap(autoConnect = true) {
+    delete this.connecting;
     this.connection = new Promise((resolve) =>
       this.bus.once("connected", resolve)
     );
     this.workerPool = createChannelPool(this.connection);
     this.warmClose = false;
+    if (autoConnect) this.connect();
   }
 
   private parseOptions(options?: TemitOptions): InternalTemitOptions {
@@ -290,6 +321,7 @@ export class TemitClient {
      */
     channel.on("error", console.error);
     channel.on("close", () => {
+      channel.removeAllListeners();
       if (!this.warmClose) throw new ReplyConsumerDiedError();
     });
 

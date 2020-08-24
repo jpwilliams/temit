@@ -22,12 +22,12 @@ export type ConsumerHandler<Args extends unknown[], Return> =
  * @public
  */
 export type FnConsumerHandler<Args extends unknown[], Return> = (
-  event: TemitEvent,
+  event: Readonly<TemitEvent>,
   ...args: Args
 ) => Promise<Return> | Return;
 
 export type PromiseConsumerHandler<Args extends unknown[], Return> = (
-  event: TemitEvent,
+  event: Readonly<TemitEvent>,
   ...args: Args
 ) => Promise<[null, Return] | [ErrorObject | unknown, null]>;
 

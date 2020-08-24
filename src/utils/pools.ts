@@ -1,6 +1,10 @@
 // public
 import genericPool, { Pool } from "generic-pool";
 import { Connection, Channel } from "amqplib";
+import Debug from "debug";
+
+// config
+const debug = Debug("temit");
 
 export const createChannelPool = (
   connection: Promise<Connection>
@@ -14,7 +18,12 @@ export const createChannelPool = (
         channel.on("error", () => {
           /* Errors should be handled in implementers */
         });
-        channel.on("close", () => console.log("Worker channel closed"));
+        channel.on("close", () => {
+          channel.removeAllListeners();
+
+          // TODO Change to DEBUG
+          debug("Worker channel closed");
+        });
 
         return channel;
       },

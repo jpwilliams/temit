@@ -53,7 +53,10 @@ export const parseReplyConsumerMessage = (
   return [err, data];
 };
 
-const parseEvent = (msg: ConsumeMessage): TemitEvent => {
+/**
+ * Generates a read-only Temit Event from an incoming message.
+ */
+const parseEvent = (msg: ConsumeMessage): Readonly<TemitEvent> => {
   const event: TemitEvent = {
     id: msg.properties.messageId,
     type: msg.fields.routingKey,
@@ -62,5 +65,5 @@ const parseEvent = (msg: ConsumeMessage): TemitEvent => {
 
   if (msg.properties.timestamp) event.sent = new Date(msg.properties.timestamp);
 
-  return event;
+  return Object.freeze(event);
 };

@@ -7,10 +7,10 @@ import CallableInstance from "callable-instance";
 import ms from "ms";
 
 // local
-import { TemitClient } from "./TemitClient";
-import { generateId } from "./utils/ids";
-import { Priority } from "./types/utility";
-import { RequesterTimeoutError, RequesterNoRouteError } from "./utils/errors";
+import { TemitClient } from "../TemitClient";
+import { generateId } from "../utils/ids";
+import { Priority } from "../types/utility";
+import { RequesterTimeoutError, RequesterNoRouteError } from "../utils/errors";
 
 /**
  * @public
@@ -114,6 +114,11 @@ export class Requester<
   private waitForResult(message: Options.Publish): Promise<Return> {
     return new Promise((resolve, reject) => {
       const close = () => {
+        if (message.messageId && this.timers[message.messageId]) {
+          clearTimeout(this.timers[message.messageId]);
+          delete this.timers[message.messageId];
+        }
+
         this.temit.bus.removeAllListeners(`timeout-${message.messageId}`);
         this.temit.bus.removeAllListeners(`data-${message.messageId}`);
         this.temit.bus.removeAllListeners(`return-${message.messageId}`);

@@ -2,18 +2,18 @@
 import { Channel, Replies, ConsumeMessage } from "amqplib";
 
 // local
-import { TemitClient } from "./TemitClient";
+import { TemitClient } from "../TemitClient";
 import {
   ConsumerHandler,
   PromiseConsumerHandler,
   wrapHandler,
-} from "./utils/handlers";
+} from "../utils/handlers";
 import {
   ConsumerDiedError,
   ConsumerCancelledError,
   HandlerRequiredError,
-} from "./utils/errors";
-import { parseConsumerMessage, TemitEvent } from "./utils/messaging";
+} from "../utils/errors";
+import { parseConsumerMessage, TemitEvent } from "../utils/messaging";
 
 /**
  * @public
@@ -175,6 +175,7 @@ export class Listener<Arg extends unknown> {
 
     channel.on("error", console.error);
     channel.on("close", () => {
+      channel.removeAllListeners();
       if (!this.temit.warmClose) throw new ConsumerDiedError();
     });
 

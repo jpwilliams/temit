@@ -4,9 +4,9 @@ import { Options } from "amqplib";
 import ms from "ms";
 
 // local
-import { Priority } from "./types/utility";
-import { TemitClient } from "./TemitClient";
-import { generateId } from "./utils/ids";
+import { Priority } from "../types/utility";
+import { TemitClient } from "../TemitClient";
+import { generateId } from "../utils/ids";
 
 /**
  * @public
