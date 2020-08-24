@@ -108,3 +108,4 @@ lib/
 
 # API Extractor directories
 temp/
+docs/api/
