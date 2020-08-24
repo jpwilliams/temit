@@ -30,42 +30,75 @@ To see other methods of installation, including for differing platforms, see [Do
 
 There are four components to use within Temit.
 
-A `Requester` sends data to a single `Endpoint`, which sends data back.
+- A `Requester` sends data to a single `Endpoint`, which sends data back.
+- An `Emitter` sends data to all `Listeners`.
 
-An `Emitter` sends data to all `Listener`s.
+For redundancy and scalability, endpoints and listeners are automatically grouped together to handle load, even with multiple processes across multiple machines.
+
+With these simple components, it's possible to build a fast, inter-connected, event-driven system where services only care about _data_ as opposed to where it comes from or what is providing it.
 
 For simple request/response behaviour, we first create an endpoint that will receive data.
 
 ```typescript
-// service-alice.ts
+// alice-service.ts
 import { TemitClient } from "temit";
 
-const temit = new TemitClient("service-alice");
+/**
+ * Connect to RabbitMQ right now as "alice-service"
+ */
+const temit = new TemitClient("alice-service");
 
-temit
-  .endpoint("hello", (event, name: string) => {
-    return `Hello, ${name}!`;
-  })
-  .open();
+/**
+ * Create a new endpoint for the "hello" event that takes a string as input
+ * and returns a string.
+ */
+const helloEndpoint = temit.endpoint("hello", (_event, name: string) => {
+  return `Hello, ${name}!`;
+});
+
+/**
+ * Open the endpoint to traffic and log "Ready!" when it's ready to go.
+ *
+ * Endpoints and listeners actually automatically open unless otherwise
+ * specified in their options, but we can still use `open()` to check for
+ * readiess.
+ */
+helloEndpoint.open().then(() => console.log("Ready!"));
 ```
 
 Next, we create a requester that will fetch data from our endpoint.
 
 ```typescript
-// service-bob.ts
+// bob-service.ts
 import { TemitClient } from "temit";
 
-const temit = new TemitClient("service-bob");
+/**
+ * Connect to RabbitMQ right now as "bob-service"
+ */
+const temit = new TemitClient("bob-service");
 
 (async () => {
+  /**
+   * Create a reusable requester that hits the "hello" event.
+   */
   const sayHello = temit.requester("hello");
 
-  const bob = await sayHello("Bob"); // "Hello, Bob!"
-  const jack = await sayHello("Jack"); // "Hello, Jack!"
+  /**
+   * Get results for both "Bob" and "Jack" inputs
+   */
+  const [bob, jack] = await Promise.all([sayHello("Bob"), sayHello("Jack")]);
+
+  /**
+   * Returns:
+   *
+   * "Hello, Bob!"
+   * "Hello, Jack!
+   */
+  console.log(bob, jack);
 })();
 ```
 
-As long as a service is connected to the same RabbitMQ cluster as another, they can send data and respond to each other.
+As long as a service is connected to the same RabbitMQ cluster as another, they can instantly talk to each other.
 
 ### Emitting events
 
@@ -74,35 +107,58 @@ Leveraging the power of RabbitMQ, we can also emit events to the entire system. 
 First, let's create a listener that sends a welcome email to a user upon creation.
 
 ```ts
-// service-charlie.ts
+// charlie-service.ts
 import { TemitClient } from "temit";
 
-const temit = new TemitClient("service-charlie");
+/**
+ * Connect to RabbitMQ right now as "charlie-service"
+ */
+const temit = new TemitClient("charlie-service");
 
-temit
-  .listener("user.created", (event, username: string) => {
-    sendWelcomeEmail(username);
-  })
-  .open();
+/**
+ * Create a new listener for the "user.created" event that takes the incoming
+ * username as input and sends a welcome email.
+ */
+const welcomeListener = temit.listener(
+  "user.created",
+  (_event, username: string) => sendWelcomeEmail(username)
+);
+
+/**
+ * Open the listener to traffic.
+ */
+welcomeListener.open().then(() => console.log("Ready!"));
 ```
 
 Then we emit an event to it.
 
 ```ts
-// service-dana.ts
+// dana-service.ts
 import { TemitClient } from "temit";
 
-const temit = new TemitClient("service-dana");
+/**
+ * Connect to RabbitMQ right now as "dana-service"
+ */
+const temit = new TemitClient("dana-service");
 
 (async () => {
+  /**
+   * Create a reusable emitter that hits the "user.created" event.
+   */
   const emitUserCreated = temit.emitter("user.created");
 
-  await emitUserCreated("bob");
-  await emitUserCreated("alice");
+  /**
+   * Emit two user creations to the system.
+   */
+  await Promise.all([emitUserCreated("bob"), emitUserCreated("alice")]);
 })();
 ```
 
-Listeners can hook in to emitted events at any point. Once they've been created, they'll buffer tasks in RabbitMQ for redundancy so they never miss an event even if the service goes offline. This makes listeners great for decoupling logic, making it easier to reason about and easier to support.
+Listeners can hook in to emitted events at any point. Once they've been created, they'll buffer tasks in RabbitMQ for redundancy so they never miss an event even if the service goes offline. This makes listeners great for decoupling logic, resulting in services that are generally easier to reason about and easier to support.
+
+In addition, all our emailing serivce (`charlie-service`) cares about is the **data** that's coming from the `"user.created"` event; we can entirely rewrite our user service and, so long as it still emits that event, everything will continue to function.
+
+This is an important distinction, as we no longer have to worry about where to source data from or which server to make a request to.
 
 ### Types
 
@@ -113,19 +169,19 @@ import { TemitClient } from "temit";
 
 const temit = new TemitClient();
 
-temit.endpoint<[name: string], string>(
-  "hello",
-  (event: Event, name: string) => `Hello, ${name}!`
+// <Incoming, Outgoing>
+temit.endpoint<string, User>("user.get", (_event, name) => ({ name }));
+
+// <Outgoing, Incoming>
+temit.requester<string, User>("user.get");
+
+// <Incoming>
+temit.listener<string>("user.created", (_event, username) =>
+  sendWelcomeEmail(username)
 );
 
-temit.requester<[name: string], string>("hello");
-
-temit.listener<[username: string], string>(
-  "user.created",
-  (event: Event, username: string) => sendWelcomeEmail(username)
-);
-
-temit.emitter<[username: string]>("user.created");
+// <Outgoing>
+temit.emitter<string>("user.created");
 ```
 
 ## Scaling
@@ -138,10 +194,10 @@ Creating requesters and opening/closing endpoints and listeners performs some ba
 
 For performance reasons (for both your application and RabbitMQ), it's therefore best practice to create a single component for each task and re-use it as much as possible.
 
-For example, I might make a single `getUser` requester and utilise that in multiple places:
+For example, I might make a single `getUser` requester and utilise it in multiple places:
 
 ```ts
-const getUser = temit.requester<[username: string], User>("user.get");
+const getUser = temit.requester<string, User>("user.get");
 
 const sendWelcomeEmail = async (username: string) => {
   const user = await getUser(username);
@@ -154,17 +210,13 @@ const sendSurveySms = async (username: string) => {
 };
 ```
 
-This practice is best done with emitters, too.
+This is best done with emitters, too.
 
 With this, your application can make all the necessary arrangements with RabbitMQ when it boots, and sending/receiving messages will be lightning fast from then on.
 
-:::info
-
-Don't bend over backwards to try and achieve single requesters or emitters where it doesn't make sense.
-
-The performance hit on RabbitMQ's side usually won't come in to effect before you're re-creating hundreds of queues every second.
-
-:::
+> Don't bend over backwards to try and achieve single requesters or emitters where it doesn't make sense.
+>
+> The performance hit on RabbitMQ's side usually won't come in to effect before you're re-creating hundreds of queues every second.
 
 ## Queuing behaviour
 
@@ -190,13 +242,9 @@ This is intentional; endpoints are intended to be used for request/response beha
 
 A listener receives messages from emitters, but can not reply. Once created, a listener will buffer messages in their queue even if they go offline, ensuring they never miss an emission.
 
-:::info
-
-For scaling purposes, listeners are assigned a numeric ID based on the order in which they are instantiated. This can cause race conditions or issues when refactoring code.
-
-To circumvent this, you can provide a `group` name in the listener's options that will be used instead of the numeric ID.
-
-:::
+> For scaling purposes, listeners are assigned a numeric ID based on the order in which they are instantiated. This can cause race conditions or issues when refactoring code.
+>
+> To circumvent this, you can provide a `group` name in the listener's options that will be used instead of the numeric ID.
 
 To combat dead queues being left on RabbitMQ after refactors, listener queues will remove themselves after having no connected consumer for 30 days.
 

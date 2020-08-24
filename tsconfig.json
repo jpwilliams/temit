@@ -10,7 +10,7 @@
     "pretty": true,
     "strict": true, // includes noImplicitAny, noImplicitThis, alwaysStrict and all strict options
     "outDir": "lib",
-    "target": "ES6",
+    "target": "ES5",
     "module": "CommonJS"
   },
   "include": ["src/**/*"],
