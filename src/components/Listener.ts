@@ -71,7 +71,8 @@ interface InternalListenerOptions {
  */
 export type ListenerHandler<Arg extends unknown> = ConsumerHandler<
   [Arg],
-  never
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  any
 >;
 
 /**
