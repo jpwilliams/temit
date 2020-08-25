@@ -15,7 +15,6 @@ export type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
  */
 export type ConsumerHandler<Args extends unknown[], Return> =
   | FnConsumerHandler<Args, Return>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   | NotFunction<Return>;
 
 /**

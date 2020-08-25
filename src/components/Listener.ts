@@ -4,9 +4,9 @@ import { Channel, Replies, ConsumeMessage } from "amqplib";
 // local
 import { TemitClient } from "../TemitClient";
 import {
-  ConsumerHandler,
   PromiseConsumerHandler,
   wrapHandler,
+  FnConsumerHandler,
 } from "../utils/handlers";
 import {
   ConsumerDiedError,
@@ -19,16 +19,6 @@ import { parseConsumerMessage, TemitEvent } from "../utils/messaging";
  * @public
  */
 export interface ListenerOptions {
-  /**
-   * Sets the string used to group listeners together for scaling purposes.
-   *
-   * This defaults to an incrementing numeric ID, though this can cause race
-   * conditions for code that asynchronously creates listeners.
-   *
-   * If this is the case, set the group here for safety.
-   */
-  group?: string;
-
   /**
    * Sets whether or not the listener should buffer incoming messages should it
    * go offline. This (`true`) is the default behaviour.
@@ -69,11 +59,8 @@ interface InternalListenerOptions {
 /**
  * @public
  */
-export type ListenerHandler<Arg> = ConsumerHandler<
-  [Arg],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any
->;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type ListenerHandler<Arg> = FnConsumerHandler<[Arg], any>;
 
 /**
  * @public
@@ -81,19 +68,23 @@ export type ListenerHandler<Arg> = ConsumerHandler<
 export class Listener<Arg> {
   private temit: TemitClient;
   private event: string;
+  private group: string;
   private options: InternalListenerOptions;
   private bootstrapped?: Promise<this>;
   private channel?: Channel;
-  private handler?: PromiseConsumerHandler<[Arg], never>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private handler?: PromiseConsumerHandler<[Arg], any>;
 
   constructor(
     temit: TemitClient,
     event: string,
+    group: string,
     opts: ListenerOptions = {},
     handler: ListenerHandler<Arg>
   ) {
     this.temit = temit;
     this.event = event;
+    this.group = group;
     this.options = this.parseOptions(opts);
     this.handler = this.parseHandler(handler);
   }
@@ -235,14 +226,13 @@ export class Listener<Arg> {
 
   private parseHandler(
     handler: ListenerHandler<Arg>
-  ): PromiseConsumerHandler<[Arg], never> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ): PromiseConsumerHandler<[Arg], any> {
     return wrapHandler(handler);
   }
 
   private parseOptions(opts?: ListenerOptions): InternalListenerOptions {
-    const queue = `${this.event}:l:${this.temit.name}:${
-      opts?.group || this.temit.listenerCounter
-    }`;
+    const queue = `${this.event}:l:${this.temit.name}:${this.group}`;
 
     const buffer = Boolean(opts?.buffer ?? true);
     const prefetch = opts?.prefetch ?? 48;
