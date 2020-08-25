@@ -1,8 +1,21 @@
 ---
 id: introduction
-title: Introduction
+title: Getting started
 sidebar_label: Introduction
 ---
+
+## Introduction
+
+Temit is a set of tools to facilitate the use of RabbitMQ as a backbone for interconnected microservices. It can replace the need for service discovery in complex networks, and works to extend well-known request/response semantics with event-driven methodologies to support everything from simple service-to-service communication to in-depth job queue processing.
+
+### Key features
+
+- Four simple components: `requester`, `endpoint`, `listener`, and `emitter`
+- Familiar request/response semantics for inter-service communication
+- Instantly "[evented](https://en.wikipedia.org/wiki/Event-driven_architecture)" system, letting you easily hook in to data flowing through the system
+- Backed by [RabbitMQ](https://www.rabbitmq.com/), "_the most widely deployed open source message broker_"
+
+###
 
 ## Installation
 
@@ -10,7 +23,7 @@ sidebar_label: Introduction
 npm install temit
 ```
 
-## Setting up RabbitMQ
+### Setting up RabbitMQ
 
 Temit requires RabbtiMQ v3.5.0+.
 
@@ -26,7 +39,7 @@ docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-manag
 
 To see other methods of installation, including for differing platforms, see [Downloading and Installing RabbitMQ](https://www.rabbitmq.com/download.html).
 
-## Usage
+## Basic example
 
 There are four components to use within Temit.
 
@@ -42,27 +55,12 @@ For simple request/response behaviour, we first create an endpoint that will rec
 ```typescript
 // alice-service.ts
 import { TemitClient } from "temit";
-
-/**
- * Connect to RabbitMQ right now as "alice-service"
- */
 const temit = new TemitClient("alice-service");
 
-/**
- * Create a new endpoint for the "hello" event that takes a string as input
- * and returns a string.
- */
 const helloEndpoint = temit.endpoint("hello", (_event, name: string) => {
   return `Hello, ${name}!`;
 });
 
-/**
- * Open the endpoint to traffic and log "Ready!" when it's ready to go.
- *
- * Endpoints and listeners actually automatically open unless otherwise
- * specified in their options, but we can still use `open()` to check for
- * readiess.
- */
 helloEndpoint.open().then(() => console.log("Ready!"));
 ```
 
@@ -71,29 +69,11 @@ Next, we create a requester that will fetch data from our endpoint.
 ```typescript
 // bob-service.ts
 import { TemitClient } from "temit";
-
-/**
- * Connect to RabbitMQ right now as "bob-service"
- */
 const temit = new TemitClient("bob-service");
 
 (async () => {
-  /**
-   * Create a reusable requester that hits the "hello" event.
-   */
   const sayHello = temit.requester("hello");
-
-  /**
-   * Get results for both "Bob" and "Jack" inputs
-   */
   const [bob, jack] = await Promise.all([sayHello("Bob"), sayHello("Jack")]);
-
-  /**
-   * Returns:
-   *
-   * "Hello, Bob!"
-   * "Hello, Jack!
-   */
   console.log(bob, jack);
 })();
 ```
@@ -109,24 +89,13 @@ First, let's create a listener that sends a welcome email to a user upon creatio
 ```ts
 // charlie-service.ts
 import { TemitClient } from "temit";
-
-/**
- * Connect to RabbitMQ right now as "charlie-service"
- */
 const temit = new TemitClient("charlie-service");
 
-/**
- * Create a new listener for the "user.created" event that takes the incoming
- * username as input and sends a welcome email.
- */
 const welcomeListener = temit.listener(
   "user.created",
   (_event, username: string) => sendWelcomeEmail(username)
 );
 
-/**
- * Open the listener to traffic.
- */
 welcomeListener.open().then(() => console.log("Ready!"));
 ```
 
@@ -135,21 +104,10 @@ Then we emit an event to it.
 ```ts
 // dana-service.ts
 import { TemitClient } from "temit";
-
-/**
- * Connect to RabbitMQ right now as "dana-service"
- */
 const temit = new TemitClient("dana-service");
 
 (async () => {
-  /**
-   * Create a reusable emitter that hits the "user.created" event.
-   */
   const emitUserCreated = temit.emitter("user.created");
-
-  /**
-   * Emit two user creations to the system.
-   */
   await Promise.all([emitUserCreated("bob"), emitUserCreated("alice")]);
 })();
 ```
@@ -160,7 +118,7 @@ In addition, all our emailing serivce (`charlie-service`) cares about is the **d
 
 This is an important distinction, as we no longer have to worry about where to source data from or which server to make a request to.
 
-### Types
+## Types
 
 All four components come with proper typings. You can specify these as generics upon creation to enforce compliance or rely on inferrence when typing function parameters.
 
@@ -183,6 +141,26 @@ temit.listener<string>("user.created", (_event, username) =>
 // <Outgoing>
 temit.emitter<string>("user.created");
 ```
+
+## Connecting to RabbitMQ
+
+When connecting to RabbitMQ, Temit uses a [RabbitMQ AMQP URI](https://www.rabbitmq.com/uri-spec.html) which, by default, is `amqp://localhost`, an insecure local server.
+
+In production, you'll likely have to connect to something other than `localhost`. You can do this by providing a [`TemitOptions`](https://www.temit.dev/docs/api/temit.temitoptions) object when connecting and providing a `url`, like so:
+
+```typescript
+import { TemitClient } from "temit";
+
+const temit = new TemitClient("my-service", {
+  url: "amqps://username:password@my-rabbitmq-server.com",
+});
+```
+
+The name of the [exchange](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges) to use within RabbitMQ is also configurable via the [`exchange`](https://www.temit.dev/docs/api/temit.temitoptions.exchange) key of [`TemitOptions`](https://www.temit.dev/docs/api/temit.temitoptions). This defaults to `"temit"`.
+
+Using different [virtual hosts](https://www.rabbitmq.com/vhosts.html) via the [`url`](https://www.temit.dev/docs/api/temit.temitoptions.url) key and different [exchanges](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges) via the [`exchange`](https://www.temit.dev/docs/api/temit.temitoptions.exchange) key gives you the ability to isolate groups of services away from others, as nothing in one virtual host is accessible from another.
+
+> This is only useful in certain security-focused situations and should serve more as a contractual barrier than a secure one; for most applications keeping everything in a single exchange is viable and sensible for future expansion.
 
 ## Scaling
 
