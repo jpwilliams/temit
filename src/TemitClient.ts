@@ -230,7 +230,7 @@ export class TemitClient {
     let options: EndpointOptions = {};
     let handler: EndpointHandler<Arg, Unpack<Return>>;
 
-    if (typeof args[0] !== "function") {
+    if (args.length > 1) {
       options = { ...(args[0] as EndpointOptions) };
       handler = args[1] as EndpointHandler<Arg, Unpack<Return>>;
     } else {
@@ -269,7 +269,7 @@ export class TemitClient {
     let options: ListenerOptions = {};
     let handler: ListenerHandler<Arg>;
 
-    if (typeof args[0] !== "function") {
+    if (args.length > 2) {
       options = { ...(args[0] as ListenerOptions) };
       handler = args[1] as ListenerHandler<Arg>;
     } else {
