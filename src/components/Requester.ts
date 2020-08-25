@@ -47,10 +47,10 @@ interface InternalRequesterOptions extends RequesterOptions {
 /**
  * @public
  */
-export class Requester<
-  Arg extends unknown,
-  Return = unknown
-> extends CallableInstance<[Arg], Promise<Return>> {
+export class Requester<Arg, Return> extends CallableInstance<
+  unknown extends Arg ? [unknown?] : [Arg],
+  Promise<Return>
+> {
   private temit: TemitClient;
   private event: string;
   private channel?: Channel;

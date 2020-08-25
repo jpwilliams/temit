@@ -50,15 +50,12 @@ interface InternalEndpointOptions extends EndpointOptions {
 /**
  * @public
  */
-export type EndpointHandler<Arg extends unknown, Return> = ConsumerHandler<
-  [Arg],
-  Return
->;
+export type EndpointHandler<Arg, Return> = ConsumerHandler<[Arg], Return>;
 
 /**
  * @public
  */
-export class Endpoint<Arg extends unknown, Return> {
+export class Endpoint<Arg, Return> {
   private temit: TemitClient;
   private event: string;
   private options: InternalEndpointOptions;

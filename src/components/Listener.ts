@@ -69,7 +69,7 @@ interface InternalListenerOptions {
 /**
  * @public
  */
-export type ListenerHandler<Arg extends unknown> = ConsumerHandler<
+export type ListenerHandler<Arg> = ConsumerHandler<
   [Arg],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   any
@@ -78,7 +78,7 @@ export type ListenerHandler<Arg extends unknown> = ConsumerHandler<
 /**
  * @public
  */
-export class Listener<Arg extends unknown> {
+export class Listener<Arg> {
   private temit: TemitClient;
   private event: string;
   private options: InternalListenerOptions;

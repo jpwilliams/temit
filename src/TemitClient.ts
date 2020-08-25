@@ -201,7 +201,7 @@ export class TemitClient {
    *
    * @returns A new requester.
    */
-  public requester<Arg extends unknown, Return>(
+  public requester<Arg = unknown, Return = unknown>(
     event: string,
     opts?: RequesterOptions
   ): Requester<Arg, Return> {
@@ -212,18 +212,18 @@ export class TemitClient {
    * Creates an endpoint that can be used to respond to requesters.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public endpoint<Arg extends unknown = unknown, Return = any>(
+  public endpoint<Arg = unknown, Return = any>(
     event: string,
     handler: EndpointHandler<Arg, Unpack<Return>>
   ): Endpoint<Arg, Return>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public endpoint<Arg extends unknown = unknown, Return = any>(
+  public endpoint<Arg = unknown, Return = any>(
     event: string,
     opts: EndpointOptions,
     handler: EndpointHandler<Arg, Unpack<Return>>
   ): Endpoint<Arg, Return>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public endpoint<Arg extends unknown = unknown, Return = any>(
+  public endpoint<Arg = unknown, Return = any>(
     event: string,
     ...args: unknown[]
   ): Endpoint<Arg, Return> {
@@ -243,7 +243,7 @@ export class TemitClient {
   /**
    * Creates an emitter that can be used to push data to listeners.
    */
-  public emitter<Arg extends unknown>(
+  public emitter<Arg = unknown>(
     event: string,
     opts?: EmitterOptions
   ): Emitter<Arg> {
@@ -253,16 +253,16 @@ export class TemitClient {
   /**
    * Creates a listener that can be used to receive data from emitters.
    */
-  public listener<Arg extends unknown = unknown>(
+  public listener<Arg = unknown>(
     event: string,
     handler: ListenerHandler<Arg>
   ): Listener<Arg>;
-  public listener<Arg extends unknown = unknown>(
+  public listener<Arg = unknown>(
     event: string,
     opts: ListenerOptions,
     handler: ListenerHandler<Arg>
   ): Listener<Arg>;
-  public listener<Arg extends unknown = unknown>(
+  public listener<Arg = unknown>(
     event: string,
     ...args: unknown[]
   ): Listener<Arg> {

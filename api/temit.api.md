@@ -10,7 +10,7 @@ import CallableInstance from 'callable-instance';
 export type ConsumerHandler<Args extends unknown[], Return> = FnConsumerHandler<Args, Return> | NotFunction<Return>;
 
 // @public (undocumented)
-export class Emitter<Arg extends unknown> extends CallableInstance<[Arg], Promise<void>> {
+export class Emitter<Arg> extends CallableInstance<unknown extends Arg ? [unknown?] : [Arg], Promise<void>> {
     constructor(temit: TemitClient, event: string, opts?: EmitterOptions);
     // (undocumented)
     send(arg: Arg, options?: EmitterOptions): Promise<void>;
@@ -23,7 +23,7 @@ export interface EmitterOptions {
 }
 
 // @public (undocumented)
-export class Endpoint<Arg extends unknown, Return> {
+export class Endpoint<Arg, Return> {
     constructor(temit: TemitClient, event: string, opts: EndpointOptions | undefined, handler: EndpointHandler<Arg, Unpack<Return>>);
     // (undocumented)
     close(): this;
@@ -32,7 +32,7 @@ export class Endpoint<Arg extends unknown, Return> {
     }
 
 // @public (undocumented)
-export type EndpointHandler<Arg extends unknown, Return> = ConsumerHandler<[Arg], Return>;
+export type EndpointHandler<Arg, Return> = ConsumerHandler<[Arg], Return>;
 
 // @public (undocumented)
 export interface EndpointOptions {
@@ -43,7 +43,7 @@ export interface EndpointOptions {
 export type FnConsumerHandler<Args extends unknown[], Return> = (event: Readonly<TemitEvent>, ...args: Args) => Promise<Return> | Return;
 
 // @public (undocumented)
-export class Listener<Arg extends unknown> {
+export class Listener<Arg> {
     constructor(temit: TemitClient, event: string, opts: ListenerOptions | undefined, handler: ListenerHandler<Arg>);
     // (undocumented)
     close(): this;
@@ -52,7 +52,7 @@ export class Listener<Arg extends unknown> {
     }
 
 // @public (undocumented)
-export type ListenerHandler<Arg extends unknown> = ConsumerHandler<[Arg], never>;
+export type ListenerHandler<Arg> = ConsumerHandler<[Arg], any>;
 
 // @public (undocumented)
 export interface ListenerOptions {
@@ -68,7 +68,7 @@ export type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
 export type Priority = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 // @public (undocumented)
-export class Requester<Arg extends unknown, Return = unknown> extends CallableInstance<[Arg], Promise<Return>> {
+export class Requester<Arg, Return> extends CallableInstance<unknown extends Arg ? [unknown?] : [Arg], Promise<Return>> {
     constructor(temit: TemitClient, event: string, opts?: RequesterOptions);
     // (undocumented)
     send(arg: Arg, options?: RequesterOptions): Promise<Return>;
@@ -85,17 +85,17 @@ export class TemitClient {
     constructor(name: string, options?: TemitOptions);
     close(): Promise<this>;
     connect(): Promise<this>;
-    emitter<Arg extends unknown>(event: string, opts?: EmitterOptions): Emitter<Arg>;
-    endpoint<Arg extends unknown = unknown, Return = any>(event: string, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
+    emitter<Arg = unknown>(event: string, opts?: EmitterOptions): Emitter<Arg>;
+    endpoint<Arg = unknown, Return = any>(event: string, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
     // (undocumented)
-    endpoint<Arg extends unknown = unknown, Return = any>(event: string, opts: EndpointOptions, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
+    endpoint<Arg = unknown, Return = any>(event: string, opts: EndpointOptions, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
     isConnected(): boolean;
-    listener<Arg extends unknown = unknown>(event: string, handler: ListenerHandler<Arg>): Listener<Arg>;
+    listener<Arg = unknown>(event: string, handler: ListenerHandler<Arg>): Listener<Arg>;
     // (undocumented)
-    listener<Arg extends unknown = unknown>(event: string, opts: ListenerOptions, handler: ListenerHandler<Arg>): Listener<Arg>;
+    listener<Arg = unknown>(event: string, opts: ListenerOptions, handler: ListenerHandler<Arg>): Listener<Arg>;
     // (undocumented)
     readonly name: string;
-    requester<Arg extends unknown, Return>(event: string, opts?: RequesterOptions): Requester<Arg, Return>;
+    requester<Arg = unknown, Return = unknown>(event: string, opts?: RequesterOptions): Requester<Arg, Return>;
     }
 
 // @public (undocumented)

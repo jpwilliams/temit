@@ -46,8 +46,8 @@ interface DemitResult {
 /**
  * @public
  */
-export class Emitter<Arg extends unknown> extends CallableInstance<
-  [Arg],
+export class Emitter<Arg> extends CallableInstance<
+  unknown extends Arg ? [unknown?] : [Arg],
   Promise<void>
 > {
   private temit: TemitClient;
