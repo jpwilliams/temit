@@ -17,7 +17,7 @@
     "lint:structure": "destiny ./src --write",
     "api:check": "api-extractor run --verbose",
     "build:site:api": "npm run api:check && api-documenter markdown --input-folder temp --output-folder docs/api",
-    "build:site": "npm run build && cd website && npm ci && npm run build"
+    "build:site": "npm run build && cd website && yarn && npm run build"
   },
   "repository": {
     "type": "git",
