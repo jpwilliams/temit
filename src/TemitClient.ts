@@ -252,18 +252,26 @@ export class TemitClient {
 
   /**
    * Creates a listener that can be used to receive data from emitters.
+   *
+   * @param event - The event name to listen to.
+   * @param group - Ideally, the name of the action this listener is performing, similar to a function name. Listeners with the same service name and group will be grouped together and have requests round-robin'd between them.
+   * @param handler - The function to run in response to incoming data.
+   * @param opts - Optional options block for specifying endpoint behaviour.
    */
   public listener<Arg = unknown>(
     event: string,
+    group: string,
     handler: ListenerHandler<Arg>
   ): Listener<Arg>;
   public listener<Arg = unknown>(
     event: string,
+    group: string,
     opts: ListenerOptions,
     handler: ListenerHandler<Arg>
   ): Listener<Arg>;
   public listener<Arg = unknown>(
     event: string,
+    group: string,
     ...args: unknown[]
   ): Listener<Arg> {
     let options: ListenerOptions = {};
@@ -276,7 +284,7 @@ export class TemitClient {
       handler = args[0] as ListenerHandler<Arg>;
     }
 
-    return new Listener<Arg>(this, event, options, handler);
+    return new Listener<Arg>(this, event, group, options, handler);
   }
 
   private bootstrap(autoConnect = true) {
