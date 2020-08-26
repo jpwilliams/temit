@@ -93,13 +93,16 @@ const temit = new TemitClient("charlie-service");
 
 const welcomeListener = temit.listener(
   "user.created",
+  "send-welcome-email",
   (_event, username: string) => sendWelcomeEmail(username)
 );
 
 welcomeListener.open().then(() => console.log("Ready!"));
 ```
 
-Then we emit an event to it.
+A listener requires both an `event` and a `group`. Listeners are grouped together by a combination of their service name (the `name` passed in to `TemitClient`) and this group name. This is required to ensure that listeners consume from the same queues on each run.
+
+Now that our listener's up, we can emit events to it.
 
 ```ts
 // dana-service.ts
@@ -134,7 +137,7 @@ temit.endpoint<string, User>("user.get", (_event, name) => ({ name }));
 temit.requester<string, User>("user.get");
 
 // <Incoming>
-temit.listener<string>("user.created", (_event, username) =>
+temit.listener<string>("user.created", "sendWelcomeEmail", (_event, username) =>
   sendWelcomeEmail(username)
 );
 
