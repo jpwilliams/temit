@@ -66,9 +66,9 @@ temit.endpoint("ping", "pong", {
 
 For the majority of cases, leaving this setting alone will suit. If, however, your endpoint performs exceedingly expensive tasks, it may be a good idea to lower the prefetch number to ensure that tasks are handled in a timely manner.
 
-Settings this to `0` disables prefetch and consumers will pull an unlimited number of items from the queue as they are round-robin'd by the server.
+Setting this to `0` disables prefetch and consumers will pull an unlimited number of items from the queue as they are round-robin'd by the server.
 
-> Unlimited prefetch should be used with care. In high-flow systems, endpoints can pull messages faster than they can deal with them, resulting in rapid, uncontrolled memory consumption.
+> Unlimited prefetch should be used with care. In high-flow systems with prefetch disabled, endpoints can pull messages faster than they can deal with them, resulting in rapid, uncontrolled memory consumption.
 >
 > Values in the `100` through `300` range usually offer optimal throughput and do not run significant risk of overwhelming consumsers. Higher values often run in to the law of diminishing returns.
 
@@ -96,6 +96,6 @@ Use `subject.[subject].verb` as event names, i.e. `user.create` or `user.email.r
 
 If you wish to return an error to a requester, you can `throw` it; any error thrown from the handler will be returned.
 
-Should the error be catastrophic (read: process-ending), it can't be guaranteed that the message was ever properly handled, so it will return to RabbitMQ and be re-distributed to either another running endpoint or the same one once it boots back up.
+Whenever a message is pushed from RabbitMQ to an endpoint, it's marked as "acknowledged", meaning that the message is or has been handled. This means that if a message is pulled from RabbitMQ and the process dies before it can reply, the message will be dropped and the request will time out. This is because endpoints are transient, and a failed handler should result in a failed request.
 
-As long as at least one endpoint successfully handles the message before the configured expiry time set by the requester, the request will be successful.
+> If you want guaranteed deliveries that will retry on failure, use emitters and listeners instead.
