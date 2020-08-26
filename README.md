@@ -140,3 +140,11 @@ For consumers, there's no logical opportunity to lazily connect, so instead we c
 If the option is set to `true` (which is the default), then the consumer bootstraps immediately upon being instantiated.
 
 If the option is set to `false`, it doesn't bootstrap until `.open()` is explicitly called.
+
+### Negative acknowledgements
+
+If a listener fails to handle a message and it's nacked, nothing happens. We just drop the message.
+
+It'd be cool to add a global dead letter exchange that we can store messages in for later requeueing.
+
+At the very least, we'd ideally keep requeueing the failing messages until it has failed a configurable number of times. https://www.rabbitmq.com/dlx.html
