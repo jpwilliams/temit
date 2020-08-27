@@ -34,8 +34,8 @@ RUN apt-get update -y
 # Install RabbitMQ
 RUN apt-get install rabbitmq-server -y --fix-missing
 
-# Ensure RabbitMQ starts on boot
-RUN service rabbitmq-server start
-
 # Enable management plugin
-RUN rabbitmq-plugins enable rabbitmq_management
+RUN rabbitmq-plugins enable --offline rabbitmq_management
+
+# Ensure RabbitMQ starts on boot
+RUN update-rc.d rabbitmq-server defaults
