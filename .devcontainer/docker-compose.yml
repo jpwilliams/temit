@@ -1,40 +1,14 @@
 version: "3"
 services:
-  rabbitmq:
-    hostname: rabbit
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"
-      - "15672:15672"
   main:
-    # Uncomment the next line to use a non-root user for all processes.
-    # See https://aka.ms/vscode-remote/containers/non-root for details.
-    # user: vscode
-
-    # Using a Dockerfile is optional, but included for completeness.
     build:
       context: .
       dockerfile: Dockerfile
-
-    # Uncomment to expose one or more ports
-    ports:
-      - "3000:3000"
-
     volumes:
-      # This is where VS Code should expect to find your project's source code
-      # and the value of "workspaceFolder" in .devcontainer/devcontainer.json
       - ..:/workspace:cached
-
-      # Uncomment the next line to use Docker from inside the container. See https://aka.ms/vscode-remote/samples/docker-from-docker-compose for details.
-      # - /var/run/docker.sock:/var/run/docker.sock
-
-    # Uncomment the next four lines if you will use a ptrace-based debugger like C++, Go, and Rust.
-    # cap_add:
-    #   - SYS_PTRACE
-    # security_opt:
-    #   - seccomp:unconfined
-
-    # Overrides default command so things don't shut down after the process ends.
     command: sleep infinity
-    links:
-      - rabbitmq
+    network_mode: service:rabbit
+
+  rabbit:
+    image: rabbitmq:3-management
+    restart: unless-stopped
