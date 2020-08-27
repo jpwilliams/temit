@@ -13,29 +13,36 @@ FROM mcr.microsoft.com/vscode/devcontainers/javascript-node:0-${VARIANT}
 # [Optional] Uncomment if you want to install more global node modules
 # RUN sudo -u node npm install -g <your-package-list-here>
 
-# Update
-RUN apt-get update -y
+FROM rabbitmq:3-management
 
-# Upgrade
-RUN apt-get upgrade -y
+# # Update
+# RUN apt-get update -y
 
-# Install dependencies
-RUN apt-get install curl gnupg -y
+# # Upgrade
+# RUN apt-get upgrade -y
 
-# Add RabbitMQ GPG key
-RUN curl -fsSL https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc | apt-key add -
+# # Install dependencies
+# RUN apt-get install curl gnupg -y
 
-# Install RabbitMQ dependencies
-RUN apt-get install apt-transport-https
+# # Add RabbitMQ GPG key
+# RUN curl -fsSL https://github.com/rabbitmq/signing-keys/releases/download/2.0/rabbitmq-release-signing-key.asc | apt-key add -
 
-# Update
-RUN apt-get update -y
+# # Install RabbitMQ dependencies
+# RUN apt-get install apt-transport-https
 
-# Install RabbitMQ
-RUN apt-get install rabbitmq-server -y --fix-missing
+# # Update
+# RUN apt-get update -y
 
-# Enable management plugin
-RUN rabbitmq-plugins enable --offline rabbitmq_management
+# # Install RabbitMQ
+# RUN apt-get install rabbitmq-server -y --fix-missing
 
-# Ensure RabbitMQ starts on boot
-RUN update-rc.d rabbitmq-server defaults
+# # Enable management plugin
+# RUN rabbitmq-plugins enable --offline rabbitmq_management
+
+# # Ensure RabbitMQ starts on boot
+# RUN update-rc.d rabbitmq-server defaults
+
+# # Run RabbitMQ
+# RUN service rabbitmq-server start
+
+# RUN service rabbitmq-server status
