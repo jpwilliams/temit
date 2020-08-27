@@ -1,27 +1,63 @@
 // For format details, see https://aka.ms/vscode-remote/devcontainer.json or this file's README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/v0.134.0/containers/javascript-node
+// {
+//   "name": "Node.js",
+//   "build": {
+//     "dockerfile": "Dockerfile",
+//     // Update 'VARIANT' to pick a Node version: 10, 12, 14
+//     "args": { "VARIANT": "14" }
+//   },
+
+//   // Set *default* container specific settings.json values on container create.
+//   "settings": {
+//     "terminal.integrated.shell.linux": "/bin/bash"
+//   },
+
+//   // Add the IDs of extensions you want installed when the container is created.
+//   "extensions": ["dbaeumer.vscode-eslint"],
+
+//   // Use 'forwardPorts' to make a list of ports inside the container available locally.
+//   "forwardPorts": [3000, 5672, 15672],
+
+//   // Specifies a command that should be run after the container has been created.
+//   "postCreateCommand": "yarn install",
+
+//   // Comment out the next line to run as root instead.
+//   "remoteUser": "node"
+// }
+
 {
-  "name": "Node.js",
-  "build": {
-    "dockerfile": "Dockerfile",
-    // Update 'VARIANT' to pick a Node version: 10, 12, 14
-    "args": { "VARIANT": "14" }
-  },
+  "name": "Temit with RabbitMQ Server",
+
+  // Update the 'dockerComposeFile' list if you have more compose files or use different names.
+  "dockerComposeFile": "docker-compose.yml",
+
+  // The 'service' property is the name of the service for the container that VS Code should
+  // use. Update this value and .devcontainer/docker-compose.yml to the real service name.
+  "service": "main",
+
+  // The optional 'workspaceFolder' property is the path VS Code should open by default when
+  // connected. This is typically a volume mount in .devcontainer/docker-compose.yml
+  "workspaceFolder": "/workspace",
 
   // Set *default* container specific settings.json values on container create.
   "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"
+    "terminal.integrated.shell.linux": null
   },
 
   // Add the IDs of extensions you want installed when the container is created.
-  "extensions": ["dbaeumer.vscode-eslint"],
+  "extensions": []
 
-  // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [3000, 5672, 15672],
+  // Uncomment the next line if you want start specific services in your Docker Compose config.
+  // "runServices": [],
 
-  // Specifies a command that should be run after the container has been created.
-  "postCreateCommand": "yarn install",
+  // Uncomment the next line if you want to keep your containers running after VS Code shuts down.
+  // "shutdownAction": "none",
 
-  // Comment out the next line to run as root instead.
-  "remoteUser": "node"
+  // Uncomment the next line to use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": "uname -a",
+
+  // Uncomment the next line to connect as a non-root user.
+  // See https://aka.ms/vscode-remote/containers/non-root.
+  // "remoteUser": "vscode"
 }
