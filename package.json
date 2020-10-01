@@ -36,7 +36,7 @@
   ],
   "devDependencies": {
     "@microsoft/api-documenter": "^7.8.31",
-    "@microsoft/api-extractor": "^7.9.7",
+    "@microsoft/api-extractor": "^7.10.1",
     "@types/amqplib": "^0.5.13",
     "@types/debug": "^4.1.5",
     "@types/generic-pool": "^3.1.9",
@@ -62,7 +62,7 @@
     "typescript": "^3.9.7"
   },
   "dependencies": {
-    "@microsoft/api-extractor": "^7.9.8",
+    "@microsoft/api-extractor": "^7.10.1",
     "amqplib": "^0.6.0",
     "callable-instance": "^2.0.0",
     "debug": "^4.1.1",
