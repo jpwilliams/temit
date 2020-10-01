@@ -65,7 +65,7 @@
     "@microsoft/api-extractor": "^7.9.8",
     "amqplib": "^0.6.0",
     "callable-instance": "^2.0.0",
-    "debug": "^4.1.1",
+    "debug": "^4.2.0",
     "generic-pool": "^3.7.1",
     "ms": "^2.1.2",
     "serialize-error": "^7.0.1",
