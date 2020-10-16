@@ -61,7 +61,7 @@ export interface ListenerOptions {
 }
 
 // @public (undocumented)
-export type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
+export type NotFunction<T> = T extends (...args: any[]) => any ? any : T;
 
 // @public (undocumented)
 export type Priority = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;

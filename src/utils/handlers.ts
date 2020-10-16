@@ -8,7 +8,7 @@ import { TemitEvent } from "./messaging";
  * @public
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type NotFunction<T> = T extends (...args: any[]) => any ? never : T;
+export type NotFunction<T> = T extends (...args: any[]) => any ? any : T;
 
 /**
  * @public
