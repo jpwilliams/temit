@@ -109,8 +109,6 @@ export class Listener<Arg> {
   }
 
   public close(): this {
-    console.log(this.channel);
-
     return this;
   }
 
