@@ -10,12 +10,6 @@
       "event-routing",
       "internals"
     ],
-    "Recipes": [
-      "recipes/hooks",
-      "recipes/middleware",
-      "recipes/heavy-processing",
-      "recipes/job-queue"
-    ]
   },
   "docs-other": {
     "First Category": ["doc4", "doc5"]
