@@ -148,3 +148,7 @@ If a listener fails to handle a message and it's nacked, nothing happens. We jus
 It'd be cool to add a global dead letter exchange that we can store messages in for later requeueing.
 
 At the very least, we'd ideally keep requeueing the failing messages until it has failed a configurable number of times. https://www.rabbitmq.com/dlx.html
+
+### Tracing
+
+Have tracing data included in message headers. With this, a Remit listener could listen to `"*"` to capture all messages in the system build traces from it.
