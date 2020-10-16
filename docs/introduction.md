@@ -6,7 +6,7 @@ sidebar_label: Introduction
 
 ## Introduction
 
-Temit is a set of tools to facilitate the use of RabbitMQ as a backbone for interconnected microservices. It can replace the need for service discovery in complex networks, and works to extend well-known request/response semantics with event-driven methodologies to support everything from simple service-to-service communication to in-depth job queue processing.
+Temit is a set of high-level tools to facilitate the use of RabbitMQ as a backbone for interconnected microservices. It can replace the need for service discovery in complex networks, and works to extend well-known request/response semantics with event-driven methodologies to support everything from simple service-to-service communication to in-depth job queue processing, all within the same system.
 
 ### Key features
 
