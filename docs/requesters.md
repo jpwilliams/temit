@@ -64,9 +64,6 @@ This is done in part because **requests are transient**. They are not buffered a
 
 ## Best practices
 
-reuse
-queue churn (think of it like starting up a database connection every time you want to fetch some data)
-
 Create one requester for an event and reuse it as much as possible.
 
 Setting up a requester requires some queue configuration on RabbitMQ. While this takes a miniscule amount of time to do, consistently deleting and re-declaring queues creates what is known as "queue churn".
