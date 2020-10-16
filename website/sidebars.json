@@ -6,8 +6,6 @@
       "requesters",
       "listeners",
       "emitters",
-      "error-handling",
-      "event-routing",
       "internals"
     ],
   },
