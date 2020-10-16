@@ -71,9 +71,6 @@
       "api/temit.listeneroptions.buffer": {
         "title": "ListenerOptions.buffer property"
       },
-      "api/temit.listeneroptions.group": {
-        "title": "ListenerOptions.group property"
-      },
       "api/temit.listeneroptions": {
         "title": "ListenerOptions interface"
       },
@@ -178,14 +175,6 @@
         "title": "Endpoints",
         "sidebar_label": "Endpoints"
       },
-      "error-handling": {
-        "title": "Error handling",
-        "sidebar_label": "Error handling"
-      },
-      "event-routing": {
-        "title": "Event routing",
-        "sidebar_label": "Event routing"
-      },
       "internals": {
         "title": "Internals",
         "sidebar_label": "Internals"
@@ -204,6 +193,9 @@
       },
       "mdx": {
         "title": "Powered by MDX"
+      },
+      "recipes/distributed-transactions": {
+        "title": "recipes/distributed-transactions"
       },
       "recipes/heavy-processing": {
         "title": "Heavy processing",
@@ -224,10 +216,6 @@
       "requesters": {
         "title": "Requesters",
         "sidebar_label": "Requesters"
-      },
-      "routing": {
-        "title": "Routing",
-        "sidebar_label": "Routing"
       }
     },
     "links": {
@@ -237,7 +225,6 @@
     },
     "categories": {
       "Getting started": "Getting started",
-      "Recipes": "Recipes",
       "First Category": "First Category"
     }
   },
