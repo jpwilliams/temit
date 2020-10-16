@@ -63,7 +63,7 @@ export class Emitter<Arg> extends CallableInstance<
     this.options = this.parseOptions(opts);
   }
 
-  public async send(arg: Arg, options?: EmitterOptions): Promise<void> {
+  public async send(arg: Arg, options: EmitterOptions = {}): Promise<void> {
     /**
      * Capture the time early so that we can properly calculate delay times
      * from the intended moment.

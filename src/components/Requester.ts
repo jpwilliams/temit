@@ -67,9 +67,7 @@ export class Requester<Arg, Return> extends CallableInstance<
     this.isReady = this.bootstrap();
   }
 
-  // public close() {}
-
-  public async send(arg: Arg, options?: RequesterOptions): Promise<Return> {
+  public async send(arg: Arg, options: RequesterOptions = {}): Promise<Return> {
     /**
      * Let's parse our options.
      */
