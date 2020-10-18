@@ -1,0 +1,50 @@
+name: Publish to registries
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      rabbitmq:
+        image: rabbitmq:latest
+        ports:
+          - 5672/tcp
+        options: --health-cmd "rabbitmqctl node_health_check" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+      - run: npm ci
+      - run: npm run build:src
+      - run: npm test
+        env:
+          TEMIT_URL: amqp://localhost:${{ job.services.rabbitmq.ports[5672] }}
+  publish-npm:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+          registry-url: https://registry.npmjs.org/
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
+  publish-gpr:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 10
+          registry-url: https://npm.pkg.github.com/
+      - run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
