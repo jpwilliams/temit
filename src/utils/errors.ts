@@ -44,7 +44,7 @@ export class RequesterNoRouteError extends Error {
   constructor(message?: string) {
     super(message);
 
-    this.name = "RequesterNoRoute";
+    this.name = "RequesterNoRouteError";
     this.message =
       this.message || "Request found no endpoints to route to, so failed";
   }
@@ -54,7 +54,7 @@ export class InvalidConsumerMessageError extends Error {
   constructor(message?: string) {
     super(message);
 
-    this.name = "InvalidMessageError";
+    this.name = "InvalidConsumerMessageError";
     this.message = this.message || "Invalid consumer message received.";
   }
 }
