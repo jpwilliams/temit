@@ -1,7 +1,7 @@
 {
   "name": "temit",
   "private": false,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "RabbitMQ-backed TypeScript Microservices",
   "main": "./lib/index.js",
   "typings": "./dist/temit.d.ts",
