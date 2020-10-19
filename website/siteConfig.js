@@ -119,7 +119,7 @@ const siteConfig = {
 
   // You may provide arbitrary config keys to be used as needed by your
   // template. For example, if you need your repo's URL...
-  // repoUrl: 'https://github.com/facebook/test-site',
+  repoUrl: "https://github.com/jpwilliams/temit",
   stylesheets: [
     "https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap",
     "https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap",
