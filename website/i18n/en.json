@@ -219,9 +219,11 @@
       }
     },
     "links": {
-      "Docs": "Docs",
+      "Getting Started": "Getting Started",
       "API": "API",
-      "Blog": "Blog"
+      "Github": "Github",
+      "npm": "npm",
+      "Discord": "Discord"
     },
     "categories": {
       "Getting started": "Getting started",
