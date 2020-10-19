@@ -1,48 +1,10 @@
 # @jpwilliams/temit
 
-RabbitMQ, mate.
+RabbitMQ-backed TypeScript Microservices.
 
 Pronunciation: tɛ́mɪ́t. Teh-mitt.
 
-We need a script that will deploy to npm/gpr.
-
 ## Points
-
-### Returning falsey values
-
-`null` is a valid return value. `undefined` is not.
-
-When dealing with middleware handlers, returning `null` will short-circuit. Throwing will short-circuit. Returning `undefined` will carry on to the next handler.
-
-If nothing is returned, `null` will be returned automatically.
-
-### Mutating the event
-
-The events available in endpoints and listeners are immutable save for their `meta` property. This is an empty object that is set when the message is pushed in to the first handler of an endpoint or listener.
-
-You can use this property to pass data through to subsequent handlers.
-
-### Spec files aren't type checked
-
-`**/*.spec.ts` files are excluded in `tsconfig.json` so that they're not included in the built files. This is a problem, however, as we still want to type check them when running tests.
-
-We need a way to address this, ideally without moving all tests in to a separate folder as having them next to the implementations gives a much clearer view of what it tested and what is not.
-
-### Sending more than one argument
-
-> I'm entirely undecided on this point. Temit currently allows you to send multiple arguments and will destructure them as necessary.
->
-> Other than the below concern, I see no reason to stick to req/res formats containing a single key/value payload other than consistency.
->
-> Why shouldn't we try making things a little easier?
->
-> P.S. This is gonna age well, right?
-
-While it's very possible to be able to send more than a single argument from a requester to an endpoint or from an emitter to a listener, it's semantically simpler to keep this to a single argument.
-
-While the API may be prettier for a Node.js implementation, other languages may not deal so cleanly with mapping function arguments, so it's a safer approach to instead stick with a single JSON object.
-
-In addition, refactoring local code by adding and removing arguments is one thing, but changing the profile of the data being sent across a network boundary is another.
 
 ### Requester fallbacks
 
@@ -80,10 +42,6 @@ My concern is that decorators used outside of an over-arching framework become c
 
 An interesting project to add on top should it be seen as viable, though.
 
-### Data as handlers
-
-It's perfectly possible to provide static data as a handler.
-
 ### Examples in TypeScript
 
 Add examples right in to the TypeScript source as comments, similar to Golang. Good types are the key to success here.
@@ -91,32 +49,6 @@ Add examples right in to the TypeScript source as comments, similar to Golang. G
 ### Docusaurus
 
 Trying to use [API Extractor](https://api-extractor.com/). Let's push the docs to [Docusaurus](https://docusaurus.io).
-
-### Listener numbers
-
-Registering listeners is pretty grim what with the order having to be exactly the same. Should we enforce that a string be given that represents the name of the listener and then we use that to do the grouping instead?
-
-I think the best bet here is to enforce a second string as input.
-
-```typescript
-const logListener = temit.listener(
-  "user.created",
-  "log-user-creation",
-  (_event, username: string) => {
-    log(username);
-  }
-);
-```
-
-It makes things a bit more verbose for sure, but race conditions unless you dance around it seems like a terrible idea.
-
-An alternative thought was to use numbers until told otherwise, via a `group` parameter or something similar in the listener's options. That's great, but then with listenrs `1 - 5`, adding a group to listener #2 would then skew the queues of `3 - 5`, as they'd now be `2 - 4`.
-
-This sucks.
-
-_Another_ alternative is to try and use the `name` of the handler function given. If it's anonymous then this obviously won't work, but I think the more dangerous situation here is that the consumers are separated enough that the handlers are just named something generic (like `handler`) and we get queue overlap.
-
-I think _requiring_ a string input for grouping is the best bet here. **It should be scoped by the TemitClient's name too, and an effort needs to be made to allow users to easily understand what it's for and why they're having to put it in.**
 
 ### (event, data) shape of consumer handlers
 
