@@ -4,12 +4,9 @@ title: Internals
 sidebar_label: Internals
 ---
 
-# internals
-
 Go through best practices given the internal implementation of AMQP.
 
 Recommended:
 
-* Single connection per process.
-* Create a requester/emitter once and re-use.
-
+- Single connection per process.
+- Create a requester/emitter once and re-use.

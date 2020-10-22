@@ -4,9 +4,7 @@ title: Emitters
 sidebar_label: Emitters
 ---
 
-# emitters
-
-Emitters in Temit are intended to announce events to the entire system. Other services then use [listeners](emitters.md) to listen and queue events they're interested in. Like requesters, an emitter is a re-usable function that emits data to a particular event name.
+Emitters in Temit are intended to announce events to the entire system. Other services then use [listeners]() to listen and queue events they're interested in. Like requesters, an emitter is a re-usable function that emits data to a particular event name.
 
 When created, an emitter only requires an `event` name to send.
 
@@ -58,9 +56,9 @@ This can be useful for varying situations, but some examples might be a "Remind 
 
 `delay` takes any one of the following:
 
-* A numeric value representing the number of milliseconds to wait before emitting
-* A [ms](https://github.com/vercel/ms)-compatible time string \(e.g. `12s`, `5min`, `3 days`\) representing the amount of time to wait before emitting
-* A `Date` which represents the exact timestamp at which the message should be emitted.
+- A numeric value representing the number of milliseconds to wait before emitting
+- A [ms](https://github.com/vercel/ms)-compatible time string (e.g. `12s`, `5min`, `3 days`) representing the amount of time to wait before emitting
+- A `Date` which represents the exact timestamp at which the message should be emitted.
 
 ## Routing
 
@@ -77,4 +75,3 @@ Create one emitter for an event and reuse it as much as possible.
 ### Nothing listening to emission
 
 If nothing has ever been interested in a particular emission, it will enter RabbitMQ and be dropped immediately.
-
