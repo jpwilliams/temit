@@ -4,6 +4,8 @@ title: Requesters
 sidebar_label: Requesters
 ---
 
+# requesters
+
 Requests in Temit are semantically very similar to HTTP requests, though a `requester` is a re-usable function that fetches data from a set `event`.
 
 When created, a requester only requires an `event` name to respond to.
@@ -78,8 +80,9 @@ If no _active_ endpoints were found with the given `event` name, the promise ret
 
 ### Request timed out
 
-If a timeout is set (the default is 30 seconds) and an endpoint has not successfully handled a given request within that time, the request will reject and the message will be dropped from RabbitMQ.
+If a timeout is set \(the default is 30 seconds\) and an endpoint has not successfully handled a given request within that time, the request will reject and the message will be dropped from RabbitMQ.
 
 ### Requester dies after sending
 
 If a requester dies after sending, Temit has no reasonable place to deliver any returned data to, so the message and any returned data will be dropped.
+

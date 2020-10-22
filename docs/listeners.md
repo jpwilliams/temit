@@ -4,6 +4,8 @@ title: Listeners
 sidebar_label: Listeners
 ---
 
+# listeners
+
 Listeners in Temit receive messages by watching a particular `event`. Once they've been created, they'll buffer tasks in RabbitMQ so they never miss an event, even if the service goes offline. This makes listeners great for decoupling logic, resulting in services that are generally easier to reason about and easier to support.
 
 A listener requires an `event` to listen to, a `group` for scaling, and a `handler` that will deal with incoming messages. This simple listener listens to the `"user.created"` event and sends a welcome email.
@@ -32,11 +34,9 @@ Unlike endpoints, listeners require a separate `group` parameter. This is due to
 
 **It's usually a good idea to name the group the same as you'd name the function that the listener performs**, like our `"send-welcome-email"` example above. But why can't this be done automatically, or why can't the name of the provided handler be used instead?
 
----
-
 When a listener is created, it will assert and consume from a queue comprised of the `TemitClient`'s name and the `group` specified. For example, this queue is the one created in the initial example, with the added detail that we're in the `alice-service`.
 
-```
+```text
 // [event]:l:[service name]:[group name]
 user.created:l:alice-service:send-welcome-email
 ```
@@ -49,9 +49,9 @@ In previous implementations, these queue names have been generated using a incre
 
 When handling incoming requests, a handler function is required. Temit waits for the result of the handler function to determine whether or not the message was successfully handled or not.
 
-It the function returns without throwing (or without rejecting if a promise), it's postitively acknowledged and the message has been successfully handled.
+It the function returns without throwing \(or without rejecting if a promise\), it's postitively acknowledged and the message has been successfully handled.
 
-If the function _does_ throw (or reject), the message is negatively acknowlegded and marked as a failed handle.
+If the function _does_ throw \(or reject\), the message is negatively acknowlegded and marked as a failed handle.
 
 ## Options
 
@@ -63,11 +63,11 @@ When creating a listener, there are a few options that can be set to customise i
 
 If the option is `false`, the listener will behave more like a regualr pub/sub communication method; it will only receive messages while it's listening, and will miss all messages that are sent while it's not.
 
-This can be useful if you wish to temporarily tap in to an emission (perhaps for testing) or for high-load, non-critical systems.
+This can be useful if you wish to temporarily tap in to an emission \(perhaps for testing\) or for high-load, non-critical systems.
 
 ### Prefetch
 
-`prefetch` sets how many messages the listener will pull off of the queue to process locally. Messages are prefetched to help performance; it's often faster to pull a bulk of messages and process them than it is to consistently pull->process->fetch for every message.
+`prefetch` sets how many messages the listener will pull off of the queue to process locally. Messages are prefetched to help performance; it's often faster to pull a bulk of messages and process them than it is to consistently pull-&gt;process-&gt;fetch for every message.
 
 For the majority of cases, leaving this setting alone will suit. If, however, your listener performs exceedingly expensive tasks, it may be a good idea to lower the prefetch number to ensure that tasks are handled in a timely manner.
 
@@ -113,10 +113,11 @@ Use [kebab-case](https://en.wikipedia.org/wiki/Letter_case#Special_case_styles) 
 
 As listeners cannot reply to the emitters or requesters that triggered them, their handlers should return success or failure based on whether the message was handled correctly or not.
 
-For example, a listener that changes a user's name that finds the name is already set to the desired value shouldn't _fail_ as it has nobody to send these warnings or errors back to. Instead, it may log a warning to the system as a whole (or just `console.log`) and return success.
+For example, a listener that changes a user's name that finds the name is already set to the desired value shouldn't _fail_ as it has nobody to send these warnings or errors back to. Instead, it may log a warning to the system as a whole \(or just `console.log`\) and return success.
 
 If a handler returns successfully, the message is positively acknowledged and is removed from the queue.
 
 If a handler returns a failure, the message is negatively acknowledged and is removed from the queue.
 
 If the process dies before a handler has either resolved or rejected, it can't be decided whether or not the message was handled at all, so it is requeued for another listener to handle.
+

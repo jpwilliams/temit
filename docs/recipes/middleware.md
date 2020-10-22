@@ -4,6 +4,7 @@ title: Middleware
 sidebar_label: Middleware
 ---
 
-Common middleware.
-Validation.
-How to.
+# middleware
+
+Common middleware. Validation. How to.
+

@@ -4,22 +4,22 @@ title: Getting started
 sidebar_label: Introduction
 ---
 
+# introduction
+
 ## Introduction
 
 Temit is a set of high-level tools to facilitate the use of RabbitMQ as a backbone for interconnected microservices. It can replace the need for service discovery in complex networks, and works to extend well-known request/response semantics with event-driven methodologies to support everything from simple service-to-service communication to in-depth job queue processing, all within the same system.
 
 ### Key features
 
-- Four simple components: `requester`, `endpoint`, `listener`, and `emitter`
-- Familiar request/response semantics for inter-service communication
-- Instantly "[evented](https://en.wikipedia.org/wiki/Event-driven_architecture)" system, letting you easily hook in to data flowing through the system
-- Backed by [RabbitMQ](https://www.rabbitmq.com/), "_the most widely deployed open source message broker_"
-
-###
+* Four simple components: `requester`, `endpoint`, `listener`, and `emitter`
+* Familiar request/response semantics for inter-service communication
+* Instantly "[evented](https://en.wikipedia.org/wiki/Event-driven_architecture)" system, letting you easily hook in to data flowing through the system
+* Backed by [RabbitMQ](https://www.rabbitmq.com/), "_the most widely deployed open source message broker_"
 
 ## Installation
 
-```sh
+```bash
 npm install temit
 ```
 
@@ -33,7 +33,7 @@ RabbitMQ can be installed on Mac/Linux using `brew` via `brew install rabbitmq`,
 
 Alternatively, you can run RabbitMQ inside Docker when experimenting on your workstation.
 
-```sh
+```bash
 docker run -it --rm --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 ```
 
@@ -43,8 +43,8 @@ To see other methods of installation, including for differing platforms, see [Do
 
 There are four components to use within Temit.
 
-- A `Requester` sends data to a single `Endpoint`, which sends data back.
-- An `Emitter` sends data to all `Listeners`.
+* A `Requester` sends data to a single `Endpoint`, which sends data back.
+* An `Emitter` sends data to all `Listeners`.
 
 For redundancy and scalability, endpoints and listeners are automatically grouped together to handle load, even with multiple processes across multiple machines.
 
@@ -86,7 +86,7 @@ Leveraging the power of RabbitMQ, we can also emit events to the entire system. 
 
 First, let's create a listener that sends a welcome email to a user upon creation.
 
-```ts
+```typescript
 // charlie-service.ts
 import { TemitClient } from "temit";
 const temit = new TemitClient("charlie-service");
@@ -100,11 +100,11 @@ const welcomeListener = temit.listener(
 welcomeListener.open().then(() => console.log("Ready!"));
 ```
 
-A listener requires both an `event` and a `group`. Listeners are grouped together by a combination of their service name (the `name` passed in to `TemitClient`) and this group name. This is required to ensure that listeners consume from the same queues on each run.
+A listener requires both an `event` and a `group`. Listeners are grouped together by a combination of their service name \(the `name` passed in to `TemitClient`\) and this group name. This is required to ensure that listeners consume from the same queues on each run.
 
 Now that our listener's up, we can emit events to it.
 
-```ts
+```typescript
 // dana-service.ts
 import { TemitClient } from "temit";
 const temit = new TemitClient("dana-service");
@@ -117,7 +117,7 @@ const temit = new TemitClient("dana-service");
 
 Listeners can hook in to emitted events at any point. Once they've been created, they'll buffer tasks in RabbitMQ for redundancy so they never miss an event even if the service goes offline. This makes listeners great for decoupling logic, resulting in services that are generally easier to reason about and easier to support.
 
-In addition, all our emailing serivce (`charlie-service`) cares about is the **data** that's coming from the `"user.created"` event; we can entirely rewrite our user service and, so long as it still emits that event, everything will continue to function.
+In addition, all our emailing serivce \(`charlie-service`\) cares about is the **data** that's coming from the `"user.created"` event; we can entirely rewrite our user service and, so long as it still emits that event, everything will continue to function.
 
 This is an important distinction, as we no longer have to worry about where to source data from or which server to make a request to.
 
@@ -125,7 +125,7 @@ This is an important distinction, as we no longer have to worry about where to s
 
 All four components come with proper typings. You can specify these as generics upon creation to enforce compliance or rely on inferrence when typing function parameters.
 
-```ts
+```typescript
 import { TemitClient } from "temit";
 
 const temit = new TemitClient();
@@ -167,17 +167,17 @@ Using different [virtual hosts](https://www.rabbitmq.com/vhosts.html) via the [`
 
 ## Scaling
 
-The benefit of using Temit (and RabbitMQ) is being able to scale up your services horizontally with little-to-no effort outside of ensuring your RabbitMQ cluster can handle the load.
+The benefit of using Temit \(and RabbitMQ\) is being able to scale up your services horizontally with little-to-no effort outside of ensuring your RabbitMQ cluster can handle the load.
 
 ## Component re-use
 
 Creating requesters and opening/closing endpoints and listeners performs some background tasks around queues in RabbitMQ. Because of this, there's a small amount of time needed for set-up between creating a component and it being able to publish or consume messages.
 
-For performance reasons (for both your application and RabbitMQ), it's therefore best practice to create a single component for each task and re-use it as much as possible.
+For performance reasons \(for both your application and RabbitMQ\), it's therefore best practice to create a single component for each task and re-use it as much as possible.
 
 For example, I might make a single `getUser` requester and utilise it in multiple places:
 
-```ts
+```typescript
 const getUser = temit.requester<string, User>("user.get");
 
 const sendWelcomeEmail = async (username: string) => {
@@ -234,3 +234,4 @@ To combat dead queues being left on RabbitMQ after refactors, listener queues wi
 Unlike a requester which has its message routed to a single endpoint, an emitter will send its message to the queues of every registered group of listeners.
 
 In the event of an emitter utilising the `delay` or `schedule` options, an extraneous queue is set up that will "[dead letter](https://www.rabbitmq.com/dlx.html)" the message after the given amount of time and then redistribute it to the system. This enables emitters to be able to schedule messages to be delivered at specific times with very little overhead.
+
