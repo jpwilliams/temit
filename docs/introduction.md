@@ -163,11 +163,7 @@ The name of the [exchange](https://www.rabbitmq.com/tutorials/amqp-concepts.html
 
 Using different [virtual hosts](https://www.rabbitmq.com/vhosts.html) via the [`url`](https://www.temit.dev/docs/api/temit.temitoptions.url) key and different [exchanges](https://www.rabbitmq.com/tutorials/amqp-concepts.html#exchanges) via the [`exchange`](https://www.temit.dev/docs/api/temit.temitoptions.exchange) key gives you the ability to isolate groups of services away from others, as nothing in one virtual host is accessible from another.
 
-:::note
-
-This is only useful in certain security-focused situations and should serve more as a contractual barrier than a secure one; for most applications keeping everything in a single exchange is viable and sensible for future expansion.
-
-:::
+> This is only useful in certain security-focused situations and should serve more as a contractual barrier than a secure one; for most applications keeping everything in a single exchange is viable and sensible for future expansion.
 
 ## Scaling
 
@@ -199,13 +195,9 @@ This is best done with emitters, too.
 
 With this, your application can make all the necessary arrangements with RabbitMQ when it boots, and sending/receiving messages will be lightning fast from then on.
 
-::: note
-
-Don't bend over backwards to try and achieve single requesters or emitters where it doesn't make sense.
-
-The performance hit on RabbitMQ's side usually won't come in to effect before you're re-creating hundreds of queues every second.
-
-:::
+> Don't bend over backwards to try and achieve single requesters or emitters where it doesn't make sense.
+>
+> The performance hit on RabbitMQ's side usually won't come in to effect before you're re-creating hundreds of queues every second.
 
 ## Queuing behaviour
 
@@ -231,13 +223,9 @@ This is intentional; endpoints are intended to be used for request/response beha
 
 A listener receives messages from emitters, but can not reply. Once created, a listener will buffer messages in their queue even if they go offline, ensuring they never miss an emission.
 
-:::note
-
-For scaling purposes, listeners are assigned a numeric ID based on the order in which they are instantiated. This can cause race conditions or issues when refactoring code.
-
-To circumvent this, you can provide a `group` name in the listener's options that will be used instead of the numeric ID.
-
-:::
+> For scaling purposes, listeners are assigned a numeric ID based on the order in which they are instantiated. This can cause race conditions or issues when refactoring code.
+>
+> To circumvent this, you can provide a `group` name in the listener's options that will be used instead of the numeric ID.
 
 To combat dead queues being left on RabbitMQ after refactors, listener queues will remove themselves after having no connected consumer for 30 days.
 
