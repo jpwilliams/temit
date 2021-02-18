@@ -73,9 +73,13 @@ For the majority of cases, leaving this setting alone will suit. If, however, yo
 
 Setting this to `0` disables prefetch and consumers will pull an unlimited number of items from the queue as they are round-robin'd by the server.
 
-> Unlimited prefetch should be used with care. In high-flow systems with prefetch disabled, listeners can pull messages faster than they can deal with them, resulting in rapid, uncontrolled memory consumption.
->
-> Values in the `100` through `300` range usually offer optimal throughput and do not run significant risk of overwhelming consumsers. Higher values often run in to the law of diminishing returns.
+:::note
+
+Unlimited prefetch should be used with care. In high-flow systems with prefetch disabled, listeners can pull messages faster than they can deal with them, resulting in rapid, uncontrolled memory consumption.
+
+Values in the `100` through `300` range usually offer optimal throughput and do not run significant risk of overwhelming consumsers. Higher values often run in to the law of diminishing returns.
+
+:::
 
 Defaults to `48`.
 
