@@ -110,6 +110,9 @@ export class Requester<Arg, Return> extends CallableInstance<
   }
 
   private waitForResult(message: Options.Publish): Promise<Return> {
+    /**
+     * Setting three promises here seems really ugly. This can be refactored.
+     */
     return new Promise((resolve, reject) => {
       const close = () => {
         if (message.messageId && this.timers[message.messageId]) {
