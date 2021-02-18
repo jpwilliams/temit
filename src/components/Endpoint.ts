@@ -40,6 +40,18 @@ export interface EndpointOptions {
    * Defaults to 48.
    */
   prefetch?: number;
+
+  /**
+   * Sets whether or not the endpoint will lazily connect to RabbitMQ. If set to
+   * `true`, the endpoint will require that `open()` is run in order to start
+   * receiving events. Otherwise the endpoint will automatically connect.
+   *
+   * Either way, `open()` can still be used to retrieve a promise that resolves
+   * when the endpoint is ready and waiting.
+   *
+   * Defaults to `false`.
+   */
+  lazy?: boolean;
 }
 
 interface InternalEndpointOptions extends EndpointOptions {
@@ -60,7 +72,6 @@ export class Endpoint<Arg, Return> {
   private event: string;
   private options: InternalEndpointOptions;
   private bootstrapped?: Promise<this>;
-  private channel?: Channel;
   private handler?: PromiseConsumerHandler<[Arg], Unpack<Return>>;
 
   constructor(
@@ -73,6 +84,7 @@ export class Endpoint<Arg, Return> {
     this.event = event;
     this.options = this.parseOptions(opts);
     this.handler = this.parseHandler(handler);
+    if (!this.options.lazy) this.open();
   }
 
   public async open(): Promise<this> {
@@ -94,17 +106,12 @@ export class Endpoint<Arg, Return> {
     return this.bootstrapped;
   }
 
-  public close(): this {
-    console.log(this.channel);
-
-    return this;
-  }
-
   private parseOptions(options?: EndpointOptions): InternalEndpointOptions {
     const queue = this.event;
     const prefetch = options?.prefetch ?? 48;
+    const lazy = Boolean(options?.lazy);
 
-    const opts: InternalEndpointOptions = { queue, prefetch };
+    const opts: InternalEndpointOptions = { queue, prefetch, lazy };
 
     return opts;
   }
@@ -140,7 +147,7 @@ export class Endpoint<Arg, Return> {
     /**
      * The queue exists, so let's create a consumption channel.
      */
-    this.channel = await this.assertConsumerChannel();
+    await this.assertConsumerChannel();
 
     return this;
   }
