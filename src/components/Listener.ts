@@ -48,12 +48,25 @@ export interface ListenerOptions {
    * Defaults to 48.
    */
   prefetch?: number;
+
+  /**
+   * Sets whether or not the listener will lazily connect to RabbitMQ. If set to
+   * `true`, the listener will require that `open()` is run in order to start
+   * receiving events. Otherwise the listener will automatically connect.
+   *
+   * Either way, `open()` can still be used to retrieve a promise that resolves
+   * when the listener is ready and waiting.
+   *
+   * Defaults to `false`.
+   */
+  lazy?: boolean;
 }
 
 interface InternalListenerOptions {
   queue: string;
   buffer: boolean;
   prefetch: number;
+  lazy: boolean;
 }
 
 /**
@@ -87,6 +100,7 @@ export class Listener<Arg> {
     this.group = group;
     this.options = this.parseOptions(opts);
     this.handler = this.parseHandler(handler);
+    if (!this.options.lazy) this.open();
   }
 
   public async open(): Promise<this> {
@@ -106,10 +120,6 @@ export class Listener<Arg> {
     }
 
     return this.bootstrapped;
-  }
-
-  public close(): this {
-    return this;
   }
 
   private async bootstrap(): Promise<this> {
@@ -234,7 +244,8 @@ export class Listener<Arg> {
 
     const buffer = Boolean(opts?.buffer ?? true);
     const prefetch = opts?.prefetch ?? 48;
+    const lazy = Boolean(opts?.lazy);
 
-    return { queue, buffer, prefetch };
+    return { queue, buffer, prefetch, lazy };
   }
 }

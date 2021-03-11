@@ -26,8 +26,6 @@ export interface EmitterOptions {
 export class Endpoint<Arg, Return> {
     constructor(temit: TemitClient, event: string, opts: EndpointOptions | undefined, handler: EndpointHandler<Arg, Unpack<Return>>);
     // (undocumented)
-    close(): this;
-    // (undocumented)
     open(): Promise<this>;
     }
 
@@ -36,6 +34,7 @@ export type EndpointHandler<Arg, Return> = ConsumerHandler<[Arg], Return>;
 
 // @public (undocumented)
 export interface EndpointOptions {
+    lazy?: boolean;
     prefetch?: number;
 }
 
@@ -46,8 +45,6 @@ export type FnConsumerHandler<Args extends unknown[], Return> = (event: Readonly
 export class Listener<Arg> {
     constructor(temit: TemitClient, event: string, group: string, opts: ListenerOptions | undefined, handler: ListenerHandler<Arg>);
     // (undocumented)
-    close(): this;
-    // (undocumented)
     open(): Promise<this>;
     }
 
@@ -57,6 +54,7 @@ export type ListenerHandler<Arg> = FnConsumerHandler<[Arg], any>;
 // @public (undocumented)
 export interface ListenerOptions {
     buffer?: boolean;
+    lazy?: boolean;
     prefetch?: number;
 }
 
@@ -88,7 +86,6 @@ export class TemitClient {
     endpoint<Arg = unknown, Return = any>(event: string, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
     // (undocumented)
     endpoint<Arg = unknown, Return = any>(event: string, opts: EndpointOptions, handler: EndpointHandler<Arg, Unpack<Return>>): Endpoint<Arg, Return>;
-    isConnected(): boolean;
     listener<Arg = unknown>(event: string, group: string, handler: ListenerHandler<Arg>): Listener<Arg>;
     // (undocumented)
     listener<Arg = unknown>(event: string, group: string, opts: ListenerOptions, handler: ListenerHandler<Arg>): Listener<Arg>;

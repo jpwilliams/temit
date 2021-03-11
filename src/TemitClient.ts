@@ -161,7 +161,7 @@ export class TemitClient {
    * publishers.
    *
    * ! You cannot re-open a closed instance of Temit; to create a new
-   * !connection, create a new TemitClient.
+   * ! connection, create a new TemitClient.
    */
   public async close(): Promise<this> {
     /**
@@ -183,14 +183,6 @@ export class TemitClient {
     this.bus.removeAllListeners();
 
     return this;
-  }
-
-  /**
-   * Returns whether or not this Temit instance is connected to
-   * an AMQP node.
-   */
-  public isConnected(): boolean {
-    return false;
   }
 
   /**
