@@ -1,16 +1,15 @@
-// core
-import { setTimeout } from "timers";
-
 // public
 import { Channel, Options } from "amqplib";
-import CallableInstance from "callable-instance";
-import ms from "ms";
+import { RequesterNoRouteError, RequesterTimeoutError } from "../utils/errors";
 
+import CallableInstance from "callable-instance";
+import { Priority } from "../types/utility";
 // local
 import { TemitClient } from "../TemitClient";
 import { generateId } from "../utils/ids";
-import { Priority } from "../types/utility";
-import { RequesterTimeoutError, RequesterNoRouteError } from "../utils/errors";
+import ms from "ms";
+// core
+import { setTimeout } from "timers";
 
 /**
  * @public
@@ -47,18 +46,22 @@ interface InternalRequesterOptions extends RequesterOptions {
 /**
  * @public
  */
-export class Requester<Arg, Return> extends CallableInstance<
+export class Requester<
+  Arg,
+  Return,
+  T extends TemitClient<any>
+> extends CallableInstance<
   unknown extends Arg ? [unknown?] : [Arg],
   Promise<Return>
 > {
-  private temit: TemitClient;
+  private temit: T;
   private event: string;
   private channel?: Channel;
   private isReady: Promise<void>;
   private options: InternalRequesterOptions;
   private timers: Record<string, NodeJS.Timeout> = {};
 
-  constructor(temit: TemitClient, event: string, opts: RequesterOptions = {}) {
+  constructor(temit: T, event: string, opts: RequesterOptions = {}) {
     super("send");
 
     this.temit = temit;
@@ -92,7 +95,7 @@ export class Requester<Arg, Return> extends CallableInstance<
      * Publish the message!
      */
     this.channel?.publish(
-      this.temit.options.exchange,
+      this.temit["options"].exchange,
       this.event,
       data,
       message

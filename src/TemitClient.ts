@@ -7,34 +7,34 @@
  * @packageDocumentation
  */
 
-// core
-import { EventEmitter } from "events";
-
-// public
-import amqplib, { Connection, Channel, ConsumeMessage } from "amqplib";
-import { Pool } from "generic-pool";
-
+import { Emitter, EmitterOptions } from "./components/Emitter";
 // local
 import {
   Endpoint,
-  EndpointOptions,
   EndpointHandler,
+  EndpointOptions,
 } from "./components/Endpoint";
-import { Requester, RequesterOptions } from "./components/Requester";
-import { Emitter, EmitterOptions } from "./components/Emitter";
 import {
-  ListenerOptions,
-  ListenerHandler,
-  Listener,
-} from "./components/Listener";
-import {
-  ReplyConsumerDiedError,
-  ReplyConsumerCancelledError,
   InvalidConsumerMessageError,
+  ReplyConsumerCancelledError,
+  ReplyConsumerDiedError,
 } from "./utils/errors";
+import {
+  Listener,
+  ListenerHandler,
+  ListenerOptions,
+} from "./components/Listener";
+import { Requester, RequesterOptions } from "./components/Requester";
+// public
+import amqplib, { Channel, Connection, ConsumeMessage } from "amqplib";
+
+// core
+import { EventEmitter } from "events";
+import { Pool } from "generic-pool";
 import { Unpack } from "./types/utility";
-import { parseReplyConsumerMessage } from "./utils/messaging";
 import { createChannelPool } from "./utils/pools";
+import { parseReplyConsumerMessage } from "./utils/messaging";
+import { z } from "zod";
 
 /**
  * Options provided to TemitClient detailing its connection to RabbitMQ.
@@ -61,6 +61,14 @@ export interface TemitOptions {
   url?: string;
 }
 
+export interface TemitSchemas {
+  events?: Record<string, Record<string, z.ZodTypeAny>>;
+  endpoints?: Record<
+    string,
+    Record<"input" | "output", Record<string, z.ZodTypeAny>>
+  >;
+}
+
 interface InternalTemitOptions extends Omit<TemitOptions, "url"> {
   exchange: string;
 }
@@ -75,37 +83,24 @@ interface PublishChannels {
 /**
  * @public
  */
-export class TemitClient {
+export class TemitClient<T extends TemitSchemas> {
   private readonly url: string;
-  public readonly name: string;
+  protected readonly name: string;
+  protected readonly schemas: TemitSchemas;
   /**
    * @internal
    */
-  public readonly options: InternalTemitOptions;
+  private readonly options: InternalTemitOptions;
   private connection!: Promise<Connection>;
   private readonly publishChans: PublishChannels = {};
   /**
    * @internal
    */
-  public readonly bus = new EventEmitter();
+  private readonly bus = new EventEmitter();
   /**
    * @internal
    */
-  public workerPool!: Pool<Channel>;
-  /**
-   * Currently this flag is used for consumers and publishers to decide whether
-   * or not to throw errors when their channels die.
-   *
-   * When set to `true`, errors will be swallowed and consumers and publishers
-   * will die silently.
-   *
-   * @internal
-   */
-  public warmClose = false;
-  /**
-   * @internal
-   */
-  public listenerCounter = 1;
+  protected workerPool!: Pool<Channel>;
   private connecting?: Promise<this>;
 
   /**
@@ -113,8 +108,9 @@ export class TemitClient {
    * @param options - Optional options block detailing how to connect to
    * RabbitMQ.
    */
-  constructor(name: string, options?: TemitOptions) {
+  constructor(name: string, schemas: T, options?: TemitOptions) {
     this.name = name;
+    this.schemas = schemas;
     this.url = options?.url ?? "amqp://localhost";
     this.options = this.parseOptions(options);
     this.bootstrap();
@@ -155,37 +151,6 @@ export class TemitClient {
   }
 
   /**
-   * Closes this instance's AMQP connection if it's active.
-   *
-   * Currently this is always a cold close and will interrupt consumers and
-   * publishers.
-   *
-   * ! You cannot re-open a closed instance of Temit; to create a new
-   * ! connection, create a new TemitClient.
-   */
-  public async close(): Promise<this> {
-    /**
-     * Set warmClose so that our consumers and publishers know that we're
-     * attempting to close.
-     *
-     * ! Pretend that we're warm closing to swallow errors.
-     * ! This will change when cold/warm closes are implemented, as warm closes
-     * ! will wait for each consumer/publisher to finish before closing the
-     * ! connection.
-     */
-    this.warmClose = true;
-
-    const connection = await this.connection;
-
-    await Promise.all([connection.close(), this.workerPool.clear()]);
-
-    delete this.connecting;
-    this.bus.removeAllListeners();
-
-    return this;
-  }
-
-  /**
    * Creates a requester that can be used to request data from endpoints.
    *
    * @param event - The event name to request data from.
@@ -193,10 +158,11 @@ export class TemitClient {
    *
    * @returns A new requester.
    */
-  public requester<Arg = unknown, Return = unknown>(
-    event: string,
-    opts?: RequesterOptions
-  ): Requester<Arg, Return> {
+  public createRequester<
+    U extends keyof T["endpoints"] & string,
+    Arg = z.input<z.ZodObject<NonNullable<T["endpoints"]>[U]["input"]>>,
+    Return = z.output<z.ZodObject<NonNullable<T["endpoints"]>[U]["output"]>>
+  >(event: U, opts?: RequesterOptions): Requester<Arg, Return> {
     return new Requester<Arg, Return>(this, event, opts);
   }
 
@@ -204,18 +170,18 @@ export class TemitClient {
    * Creates an endpoint that can be used to respond to requesters.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public endpoint<Arg = unknown, Return = any>(
+  public createEndpoint<Arg = unknown, Return = any>(
     event: string,
     handler: EndpointHandler<Arg, Unpack<Return>>
   ): Endpoint<Arg, Return>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public endpoint<Arg = unknown, Return = any>(
+  public createEndpoint<Arg = unknown, Return = any>(
     event: string,
     opts: EndpointOptions,
     handler: EndpointHandler<Arg, Unpack<Return>>
   ): Endpoint<Arg, Return>;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public endpoint<Arg = unknown, Return = any>(
+  public createEndpoint<Arg = unknown, Return = any>(
     event: string,
     ...args: unknown[]
   ): Endpoint<Arg, Return> {
@@ -235,7 +201,7 @@ export class TemitClient {
   /**
    * Creates an emitter that can be used to push data to listeners.
    */
-  public emitter<Arg = unknown>(
+  public createEmitter<Arg = unknown>(
     event: string,
     opts?: EmitterOptions
   ): Emitter<Arg> {
@@ -250,18 +216,18 @@ export class TemitClient {
    * @param handler - The function to run in response to incoming data.
    * @param opts - Optional options block for specifying endpoint behaviour.
    */
-  public listener<Arg = unknown>(
+  public createListener<Arg = unknown>(
     event: string,
     group: string,
     handler: ListenerHandler<Arg>
   ): Listener<Arg>;
-  public listener<Arg = unknown>(
+  public createListener<Arg = unknown>(
     event: string,
     group: string,
     opts: ListenerOptions,
     handler: ListenerHandler<Arg>
   ): Listener<Arg>;
-  public listener<Arg = unknown>(
+  public createListener<Arg = unknown>(
     event: string,
     group: string,
     ...args: unknown[]
@@ -279,14 +245,13 @@ export class TemitClient {
     return new Listener<Arg>(this, event, group, options, handler);
   }
 
-  private bootstrap(autoConnect = true) {
+  private bootstrap() {
     delete this.connecting;
     this.connection = new Promise((resolve) =>
       this.bus.once("connected", resolve)
     );
     this.workerPool = createChannelPool(this.connection);
-    this.warmClose = false;
-    if (autoConnect) this.connect();
+    this.connect();
   }
 
   private parseOptions(options?: TemitOptions): InternalTemitOptions {
@@ -305,7 +270,7 @@ export class TemitClient {
   /**
    * @internal
    */
-  public async assertPublishChannel(event: string): Promise<Channel> {
+  protected async assertPublishChannel(event: string): Promise<Channel> {
     /**
      * Return if already exists.
      */
@@ -322,7 +287,7 @@ export class TemitClient {
     channel.on("error", console.error);
     channel.on("close", () => {
       channel.removeAllListeners();
-      if (!this.warmClose) throw new ReplyConsumerDiedError();
+      throw new ReplyConsumerDiedError();
     });
 
     /**
@@ -351,7 +316,7 @@ export class TemitClient {
   /**
    * @internal
    */
-  public async createChannel(): Promise<Channel> {
+  private async createChannel(): Promise<Channel> {
     /**
      * Wait for the connection to be available.
      */
