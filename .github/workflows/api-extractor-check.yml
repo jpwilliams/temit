@@ -20,7 +20,7 @@ jobs:
         run: npm run api:check
       - name: API-Extractor failure
         if: ${{ failure() }}
-        uses: LouisBrunner/diff-action@v0.1.1
+        uses: LouisBrunner/diff-action@v0.3.0
         with:
           old: api/temit.api.md
           new: temp/temit.api.md
